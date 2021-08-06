@@ -1,0 +1,95 @@
+### Detector map, format:
+## crate slot start_channel end_channel refindex
+# crate slot ch_min ch_max
+bb.hodotdc.detmap = 
+## Start with the reference channels for the TDC
+##  2     2   127  127    -1 ## First channel is reference channel (per the code)
+##  2     3   127  127    -1 ## First channel is reference channel (per the code)
+## Detmap for the TDCs
+  2     2     0    127     0 ## 127 channels (Left  PMTs) with reference index
+  2     3     0    127     1 ## 127 channels (Right PMTs) with reference index
+
+bb.hodotdc.chanmap = 
+	 0  1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  
+      	 16 17  18  18  20  21  22  23  24  25  26  27  28  29  30  31 
+	 32 33  34  35  36  37  38  39  40  41  42  43  44  45  46  47 
+	 48 49  50  51  52  53  54  55  56  57  58  59  60  61  62  63 
+	 64 65  66  67  68  69  70  71  72  73  74  75  76  77  78  79 
+	 80 81  82  83  84  85  86  87  88  89  -1  -1  -1  -1  -1  -1 
+         -1  -1  -1  -1  -1  -1  -1  -1  -1  -1  -1  -1  -1  -1  -1  -1 
+         -1  -1  -1  -1  -1  -1  -1  -1  -1  -1  -1  -1  -1  -1  -1 -1000 
+	 90 91  92  93  94  95  96  97  98  99 100 101 102 103 104 105 
+	106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 121 
+	122 123 124 125 126 127 128 129 130 131 132 133 134 135 136 137 
+	138 139 140 141 142 143 144 145 146 147 148 149 150 151 152 153
+	154 155 156 157 158 159 160 161 162 163 164 165 166 167 168 169
+	170 171 172 173 174 175 176 177 178 179  -1  -1  -1  -1  -1  -1 
+         -1  -1  -1  -1  -1  -1  -1  -1  -1  -1  -1  -1  -1  -1  -1  -1 
+         -1  -1  -1  -1  -1  -1  -1  -1  -1  -1  -1  -1  -1  -1  -1 -1000
+
+
+## Positions in [m] where +z is roated by bb.theta
+bb.hodotdc.position = 0 0 2.5319 ## Need to re-check this number
+
+
+## Size
+#bb.hodotdc.size   =  0.595 2.295 0.37 # in meters
+bb.hodotdc.size   =  0.600 0.025 0.025 # in meters
+
+## Number of rows and columns
+#bb.hodotdc.ncols =  2
+#bb.hodotdc.nrows = 90
+# swapping this from intuitve 90 rows of 2 columns
+# generic detector loops row top, then column
+#our tdc is all 90 left pmt in first module, all 90 in 2nd module for right 
+bb.hodotdc.ncols =  90
+bb.hodotdc.nrows = 2
+
+## Position of first module
+bb.hodotdc.xyz    = -1.105  0.255  0.000
+## Space between modules
+#bb.hodotdc.dxdydz =  10.000  10.000  0.000
+#need to check this
+bb.hodotdc.dxdydz =  0.010  0.010  0.000
+
+bb.hodotdc.tdcGoodTimeCut = 4000.0 #-50.
+
+bb.hodotdc.reftdcGoodTimeCut = 2000.0 #-50.
+
+bb.hodotdc.tdc.offset = 0.0 #what is offset
+
+bb.hodotdc.tdc.calib = 0.1 #35ps time res per v1190 channel or 100ps
+
+bb.hodotdc.tdcbaroffset = 0
+#this is not really relevant for tdc but include to be consistent with adc db. This allows to cycle through the bars with subsections of the readout at a time. it is optional and currently not implemented for tdc in sbstiminghodoscope.cxx
+
+# this timewalk0 map is ordered as follows: first 90 elements are left pmt time walk parameters, 2nd 90 elements are the right pmt time walk parameters, numberring from bottom of stack to top
+bb.hodotdc.timewalk0map = 
+	 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+	 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0  
+	 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0  
+	 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0  
+	 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 
+	 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+	 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+	 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+	 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+	 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+	 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+	 0.0 0.0 0.0 0.0  
+
+bb.hodotdc.timewalk1map = 
+	 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+	 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0  
+	 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0  
+	 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0  
+	 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 
+	 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+	 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+	 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+	 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+	 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+	 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+	 0.0 0.0 0.0 0.0 
+
+
