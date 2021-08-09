@@ -1,5 +1,7 @@
 # Sample outout definition file
 
-#ADC from calorimeter
-block *
+###block *
 
+#block bb.hodo.*
+block bb.hodoadc.*
+block bb.hodotdc.*
