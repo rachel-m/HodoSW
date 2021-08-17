@@ -73,8 +73,10 @@ void FitTOTSlicesCombinedFit(const TString InFile="bbhodo_307_500000",
     // enable adc branches
     T->SetBranchStatus("bb.hodoadc.*",1);
     T->SetBranchAddress("bb.hodoadc.adcbarid",Thodo::ADCBar);
-    T->SetBranchAddress("bb.hodoadc.L.ap",Thodo::ADCValL);
-    T->SetBranchAddress("bb.hodoadc.R.ap",Thodo::ADCValR);
+    // T->SetBranchAddress("bb.hodoadc.L.ap",Thodo::ADCValL);
+    // T->SetBranchAddress("bb.hodoadc.R.ap",Thodo::ADCValR);
+    T->SetBranchAddress("bb.hodoadc.L.a",Thodo::ADCValL);
+    T->SetBranchAddress("bb.hodoadc.R.a",Thodo::ADCValR);
     T->SetBranchAddress("bb.hodoadc.adcbaroff",Thodo::ADCBarOff);
     T->SetBranchStatus("bb.hodotdc.*",1);
     T->SetBranchAddress("bb.hodotdc.tdcbarid",Thodo::TDCBar);
@@ -86,8 +88,10 @@ void FitTOTSlicesCombinedFit(const TString InFile="bbhodo_307_500000",
     // enable vector size branches
     T->SetBranchStatus("Ndata.bb.hodoadc.*",1);
     T->SetBranchAddress("Ndata.bb.hodoadc.adcbarid",&Thodo::NdataAdcBar);
-    T->SetBranchAddress("Ndata.bb.hodoadc.L.ap",&Thodo::NdataAdcL);
-    T->SetBranchAddress("Ndata.bb.hodoadc.R.ap",&Thodo::NdataAdcR); 
+    T->SetBranchAddress("Ndata.bb.hodoadc.L.a",&Thodo::NdataAdcL);
+    T->SetBranchAddress("Ndata.bb.hodoadc.R.a",&Thodo::NdataAdcR); 
+    //   T->SetBranchAddress("Ndata.bb.hodoadc.L.ap",&Thodo::NdataAdcL);
+    // T->SetBranchAddress("Ndata.bb.hodoadc.R.ap",&Thodo::NdataAdcR); 
     T->SetBranchAddress("Ndata.bb.hodotdc.tdcbarid",&Thodo::NdataTdcBar);
     T->SetBranchAddress("Ndata.bb.hodotdc.L.tot",&Thodo::NdataTotL);
     T->SetBranchAddress("Ndata.bb.hodotdc.R.tot",&Thodo::NdataTotR);  
@@ -109,7 +113,7 @@ void FitTOTSlicesCombinedFit(const TString InFile="bbhodo_307_500000",
   
   //==================================================== Check the bar offset
   T->GetEntry(0);
-  Int_t adcbarstart = Thodo::ADCBarOff[0];
+  Int_t adcbarstart = 64;//Thodo::ADCBarOff[0];
   cout << "adcbarstart " << adcbarstart << endl;
   
   
@@ -130,12 +134,12 @@ void FitTOTSlicesCombinedFit(const TString InFile="bbhodo_307_500000",
 
   //===================================================== Histogram Declarations
   // number of adc bins
-  Int_t NAdcBins = 100;//4096;
+  Int_t NAdcBins = 200;//4096;
   Double_t AdcBinLow = 0.;
-  Double_t AdcBinHigh = 800;//4095.;
-  Int_t NTdcBins = 20;
+  Double_t AdcBinHigh = 1000;//4095.;
+  Int_t NTdcBins = 80;
   Double_t TdcBinLow = 0.;
-  Double_t TdcBinHigh = 40.;
+  Double_t TdcBinHigh = 400.;
 
   // TOT vs ADC histos
   TH2F *hTOTvADCL[nBarsADC];
@@ -176,9 +180,10 @@ void FitTOTSlicesCombinedFit(const TString InFile="bbhodo_307_500000",
     // check for tdc hits in the bars that match the adc bars instrumented
     for(Int_t adcbar=0; adcbar<Thodo::NdataAdcBar; adcbar++){
       for(Int_t tdcbar=0; tdcbar<Thodo::NdataTdcBar; tdcbar++){
-	if(Thodo::ADCBar[adcbar]==Thodo::TDCBar[tdcbar]){
+	// if(Thodo::ADCBar[adcbar]==Thodo::TDCBar[tdcbar]){
+	if((Thodo::ADCBar[adcbar]+adcbarstart)==Thodo::TDCBar[tdcbar]){
 	  hTOTvADCL[adcbar]->Fill(Thodo::ADCValL[adcbar],Thodo::TDCTotL[tdcbar]);
-	  hTOTvADCR[adcbar]->Fill(Thodo::ADCValR[adcbar],Thodo::TDCTotL[tdcbar]);
+	  hTOTvADCR[adcbar]->Fill(Thodo::ADCValR[adcbar],Thodo::TDCTotR[tdcbar]);
 	}// if adc==tdc bar
       }// tdc bar loop
     }// adc bar loop
@@ -216,7 +221,7 @@ void FitTOTSlicesCombinedFit(const TString InFile="bbhodo_307_500000",
       // parameters outside loop below
       // Double_t UpperADC = 600.0; // for finding upper x bin of fit slices
       // Double_t LowerADC = 0.0; // for finding lower x bin of fit slices
-      Int_t TOTStatCut = 0;//1; //how many counts in y-proj we want for fit
+      Int_t TOTStatCut = 10;//1; //how many counts in y-proj we want for fit
       TF1 *fLeftTOT[nBarsADC];
       TF1 *fRightTOT[nBarsADC];
       
@@ -255,8 +260,11 @@ void FitTOTSlicesCombinedFit(const TString InFile="bbhodo_307_500000",
 	// fit the means - this callibrates the tot
 	Double_t minFitRangeTOT = ((TAxis*)hTOTvADCL[b]->GetXaxis())->GetBinCenter(1);
 	Double_t maxFitRangeTOT = ((TAxis*)hTOTvADCL[b]->GetXaxis())->GetBinCenter(NAdcBins-1);
+	//fLeftTOT[b] = new TF1(TString::Format("fTOT_Bar%d_L",adcbar),
+	//		      "[0]*x + [1] - ([2]/(x-[3]))",
+	//		      minFitRangeTOT, maxFitRangeTOT);
 	fLeftTOT[b] = new TF1(TString::Format("fTOT_Bar%d_L",adcbar),
-			      "[0]*x + [1] - ([2]/(x-[3]))",
+			      "[0]*([1]-[2]/x)",
 			      minFitRangeTOT, maxFitRangeTOT);
 	hTOTvADCL_1->Fit(TString::Format("fTOT_Bar%d_L",adcbar),"QR","",minFitRangeTOT, maxFitRangeTOT);
 	// output fit results to text file
@@ -265,7 +273,7 @@ void FitTOTSlicesCombinedFit(const TString InFile="bbhodo_307_500000",
 		    << fLeftTOT[b]->GetParameter(0) << "\t" << fLeftTOT[b]->GetParError(0) << "\t"
 		    << fLeftTOT[b]->GetParameter(1) << "\t" << fLeftTOT[b]->GetParError(1) << "\t"
 		    << fLeftTOT[b]->GetParameter(2) << "\t" << fLeftTOT[b]->GetParError(2) << "\t"
-		    << fLeftTOT[b]->GetParameter(3) << "\t" << fLeftTOT[b]->GetParError(3) << "\t"
+		    // << fLeftTOT[b]->GetParameter(3) << "\t" << fLeftTOT[b]->GetParError(3) << "\t"
 		    << "\n";
 	// sigma of each slice gauss
 	rightPadTOT->cd(2);
@@ -331,6 +339,7 @@ void FitTOTSlicesCombinedFit(const TString InFile="bbhodo_307_500000",
 		    << fRightTOT[b]->GetParameter(2) << "\t" << fRightTOT[b]->GetParError(2) << "\t"
 		    << fRightTOT[b]->GetParameter(3) << "\t" << fRightTOT[b]->GetParError(3) << "\t"
 		    << "\n";
+	// sigma of each slice
 	// sigma of each slice gauss
 	rightPadTOTr->cd(2);
 	gPad->SetTopMargin(0.12);

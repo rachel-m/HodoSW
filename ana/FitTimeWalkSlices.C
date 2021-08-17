@@ -22,7 +22,7 @@
 const Int_t nTdc = 180;
 const Int_t nBarsTDC = 90;
 const Int_t nBarsADC = 32;
-const Double_t ADCCUT = 100.0;
+const Double_t ADCCUT = 0.;//100.0;
 
 const TString REPLAYED_DIR = "/w/work0/home/rachel/HallA/BB_Hodo/cosmicdata/replayed";
 const TString ANALYSED_DIR = "/w/work0/home/rachel/HallA/BB_Hodo/cosmicdata/analysisout";
@@ -81,8 +81,10 @@ void FitTimeWalkSlices(const TString InFile="bbhodo_306_1000000", Int_t nevents=
     if(CutADC==1){
       T->SetBranchStatus("bb.hodoadc.*",1);
       T->SetBranchAddress("bb.hodoadc.adcbarid",Thodo::ADCBar);
-      T->SetBranchAddress("bb.hodoadc.L.ap",Thodo::ADCValL);
-      T->SetBranchAddress("bb.hodoadc.R.ap",Thodo::ADCValR);
+      // T->SetBranchAddress("bb.hodoadc.L.ap",Thodo::ADCValL);
+      // T->SetBranchAddress("bb.hodoadc.R.ap",Thodo::ADCValR);
+      T->SetBranchAddress("bb.hodoadc.L.a",Thodo::ADCValL);
+      T->SetBranchAddress("bb.hodoadc.R.a",Thodo::ADCValR);
       T->SetBranchAddress("bb.hodoadc.adcbaroff",Thodo::ADCBarOff);
     }
 
@@ -95,8 +97,10 @@ void FitTimeWalkSlices(const TString InFile="bbhodo_306_1000000", Int_t nevents=
     if(CutADC==1){
       T->SetBranchStatus("Ndata.bb.hodoadc.*",1);
       T->SetBranchAddress("Ndata.bb.hodoadc.adcbarid",&Thodo::NdataAdcBar);
-      T->SetBranchAddress("Ndata.bb.hodoadc.L.ap",&Thodo::NdataAdcL);
-      T->SetBranchAddress("Ndata.bb.hodoadc.R.ap",&Thodo::NdataAdcR); 
+      // T->SetBranchAddress("Ndata.bb.hodoadc.L.ap",&Thodo::NdataAdcL);
+      // T->SetBranchAddress("Ndata.bb.hodoadc.R.ap",&Thodo::NdataAdcR);
+      T->SetBranchAddress("Ndata.bb.hodoadc.L.a",&Thodo::NdataAdcL);
+      T->SetBranchAddress("Ndata.bb.hodoadc.R.a",&Thodo::NdataAdcR);  
     }
   }//setting tree
   
@@ -124,7 +128,7 @@ void FitTimeWalkSlices(const TString InFile="bbhodo_306_1000000", Int_t nevents=
   // run 307 offset 32
   // run 306 offset 0
   T->GetEntry(0);
-  Int_t adcbarstart = 0;//Thodo::ADCBarOff[0];
+  Int_t adcbarstart = 64;//Thodo::ADCBarOff[0];
   cout << "adcbarstart " << adcbarstart << endl;
 
 
@@ -156,9 +160,9 @@ void FitTimeWalkSlices(const TString InFile="bbhodo_306_1000000", Int_t nevents=
 
   // adc histos to check if cutting on adc
   // number of adc bins
-  Int_t NAdcBins = 100;//4096;
+  Int_t NAdcBins = 200;//4096;
   Double_t AdcBinLow = 0.;
-  Double_t AdcBinHigh = 800;//4095.;
+  Double_t AdcBinHigh = 2000;//4095.;
   TH1F *hADCL[nBarsADC];
   TH1F *hADCR[nBarsADC];
   for(Int_t bar=0; bar<nBarsADC; bar++){
