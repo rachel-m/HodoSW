@@ -125,7 +125,7 @@ void FitTimeWalk(const TString InFile="bbhodo_306_1000000", Int_t nevents=-1,
   
   //==================================================== Check the bar offset
   T->GetEntry(0);
-  Int_t adcbarstart = Thodo::ADCBarOff[0];
+  Int_t adcbarstart = (Int_t)Thodo::ADCBar[0];
   cout << "adcbarstart " << adcbarstart << endl;
 
 
@@ -134,9 +134,9 @@ void FitTimeWalk(const TString InFile="bbhodo_306_1000000", Int_t nevents=-1,
   // number of histo bins
   Int_t NTotBins = 80;//200;
   Double_t TotBinLow = 0.;
-  Double_t TotBinHigh = 400.;
+  Double_t TotBinHigh = 40;//400.;
   Int_t NLEBins = 120;
-  Double_t LEBinLow = -800.0;//-100.;
+  Double_t LEBinLow = -80.;//-800.0;//-100.;
   Double_t LEBinHigh = 0.0;//100.;
 
   // TOT vs LE histos
@@ -191,7 +191,7 @@ void FitTimeWalk(const TString InFile="bbhodo_306_1000000", Int_t nevents=-1,
       Int_t tdcbar = Thodo::TDCBar[tdc];
       if(CutADC==1){
 	for(Int_t adcbar=0; adcbar<nBarsADC; adcbar++){
-	  Int_t bar = adcbarstart+adcbar;
+	  Int_t bar = Thodo::ADCBar[adcbar];//adcbarstart+adcbar;
 	  if(bar==tdcbar){
 	    if(Thodo::ADCValL[adcbar]>=ADCCUT){
 	      hLeVTOTL[tdcbar]->Fill(Thodo::TDCTotL[tdc],Thodo::TDCLeL[tdc]);

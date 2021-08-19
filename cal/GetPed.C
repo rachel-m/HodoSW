@@ -91,7 +91,7 @@ void GetPed(const TString InFile="bbhodo_307_1000", Int_t nevents=-1,
   
   //==================================================== Check the bar offset
   T->GetEntry(0);
-  Int_t adcbarstart = Thodo::ADCBarOff[0];
+  Int_t adcbarstart = (Int_t)Thodo::ADCBar[0];
   cout << "adcbarstart " << adcbarstart << endl;
 
 

@@ -113,10 +113,12 @@ void FitTOT(const TString InFile="bbhodo_307_500000",
   
   //==================================================== Check the bar offset
   T->GetEntry(0);
-  Int_t adcbarstart = Thodo::ADCBarOff[0];
-  cout << "adcbarstart " << adcbarstart << endl;
+  // Float_t adcbarstart = Thodo::ADCBarOff[0];
+  cout << "Thodo::ADCBar[adcbar] " << Thodo::ADCBar[0] << endl;
+  Int_t adcbarstart = Thodo::ADCBar[0];
   
-  
+
+
   //==================================================== Create output root file
   // root file for viewing fits
   TString outrootfile = ANALYSED_DIR + "/TOTFits_" + InFile + ".root";
@@ -131,7 +133,7 @@ void FitTOT(const TString InFile="bbhodo_307_500000",
   Double_t AdcBinHigh = 1000;//4095.;
   Int_t NTdcBins = 80;
   Double_t TdcBinLow = 0.;
-  Double_t TdcBinHigh = 400.;
+  Double_t TdcBinHigh = 40;//0.;
 
   // TOT vs ADC histos
   TH2F *hTOTvADCL[nBarsADC];
@@ -171,8 +173,11 @@ void FitTOT(const TString InFile="bbhodo_307_500000",
 
     // check for tdc hits in the bars that match the adc bars instrumented
     for(Int_t adcbar=0; adcbar<Thodo::NdataAdcBar; adcbar++){
+      // cout << "Thodo::ADCBarOff " << (Int_t)Thodo::ADCBarOff[adcbar] << endl;
       for(Int_t tdcbar=0; tdcbar<Thodo::NdataTdcBar; tdcbar++){
 	if((Thodo::ADCBar[adcbar])==Thodo::TDCBar[tdcbar]){
+	  // cout << "Thodo::ADCBar[adcbar] " << Thodo::ADCBar[adcbar]
+	  //      << " Thodo::TDCBar[tdcbar] " << Thodo::TDCBar[tdcbar] << endl;
 	  hTOTvADCL[adcbar]->Fill(Thodo::ADCValL[adcbar],Thodo::TDCTotL[tdcbar]);
 	  hTOTvADCR[adcbar]->Fill(Thodo::ADCValR[adcbar],Thodo::TDCTotR[tdcbar]);
 	}// if adc==tdc bar
@@ -209,17 +214,18 @@ void FitTOT(const TString InFile="bbhodo_307_500000",
     // [0]*x + [1] - ([2]/(x-[3]))
     
     // parameters outside loop below
-    Int_t TOTStatCut = 10;//how many counts in y-proj we want for fit
+    Int_t TOTStatCut = 8;//how many counts in y-proj we want for fit
     TF1 *fLeftTOT[nBarsADC];
     TF1 *fRightTOT[nBarsADC];
     
     for(Int_t b=0; b<nBarsADC; b++){
-      
+      Int_t adcbar = adcbarstart + b;
+
       //left pmts
       // set up canvas for this pmt
-      TCanvas *cleftTOT = new TCanvas(TString::Format("cTOTFits_Bar%f_L",Thodo::ADCBar[b]),
-				      TString::Format("cTOTFits_Bar%f_L",Thodo::ADCBar[b]),
-				      700, 500);
+      TCanvas *cleftTOT = new TCanvas(TString::Format("cTOTFits_Bar%d_L",adcbar),
+    				      TString::Format("cTOTFits_Bar%d_L",adcbar),
+    				      700, 500);
       cleftTOT->Divide(2,1);
       TPad *leftPadTOT = (TPad*)cleftTOT->cd(1);
       leftPadTOT->Divide(1,2);
@@ -231,7 +237,7 @@ void FitTOT(const TString InFile="bbhodo_307_500000",
       // draw results
       // constant of each slice gauss
       leftPadTOT->cd(2);
-      TH1D *hTOTvADCL_0 = (TH1D*)gDirectory->Get(TString::Format("hTOTvADC_Bar%d_L_%d",(Int_t)Thodo::ADCBar[b],0));
+      TH1D *hTOTvADCL_0 = (TH1D*)gDirectory->Get(TString::Format("hTOTvADC_Bar%d_L_%d",adcbar,0));
       hTOTvADCL_0->Draw();
       // mean of each slice gauss
       TPad *rightPadTOT = (TPad*)cleftTOT->cd(2);
@@ -239,7 +245,7 @@ void FitTOT(const TString InFile="bbhodo_307_500000",
       rightPadTOT->cd(1);
       gPad->SetTopMargin(0.12);
       gPad->SetLeftMargin(0.15);
-      TH1D *hTOTvADCL_1 = (TH1D*)gDirectory->Get(TString::Format("hTOTvADC_Bar%d_L_%d",(Int_t)Thodo::ADCBar[b],1));
+      TH1D *hTOTvADCL_1 = (TH1D*)gDirectory->Get(TString::Format("hTOTvADC_Bar%d_L_%d",adcbar,1));
       hTOTvADCL_1->Draw();
       // fit the means - this callibrates the tot
       Double_t minFitRangeTOT = 0.0;
@@ -248,44 +254,44 @@ void FitTOT(const TString InFile="bbhodo_307_500000",
       vector<Double_t> vbincontents;
       vbincontents.clear();
       for(Int_t bin=1; bin<nbins; bin++){
-	if(hTOTvADCL_1->GetBinContent(bin)>0)
-	  vbincontents.push_back(bin);
+      	if(hTOTvADCL_1->GetBinContent(bin)>0)
+      	  vbincontents.push_back(bin);
       }
       if(vbincontents.size()>0){
-	minFitRangeTOT = ((TAxis*)hTOTvADCL_1->GetXaxis())->GetBinCenter(vbincontents[0]);
-	maxFitRangeTOT = ((TAxis*)hTOTvADCL_1->GetXaxis())->GetBinCenter(vbincontents[vbincontents.size()-1]);
+      	minFitRangeTOT = ((TAxis*)hTOTvADCL_1->GetXaxis())->GetBinCenter(vbincontents[0]);
+      	maxFitRangeTOT = ((TAxis*)hTOTvADCL_1->GetXaxis())->GetBinCenter(vbincontents[vbincontents.size()-1]);
       }
       else{
-	minFitRangeTOT = ((TAxis*)hTOTvADCL_1->GetXaxis())->GetBinCenter(1);
-	maxFitRangeTOT = ((TAxis*)hTOTvADCL_1->GetXaxis())->GetBinCenter(nbins-1);
-	}
-      // fLeftTOT[b] = new TF1(TString::Format("fTOT_Bar%f_L",adcbar),
+      	minFitRangeTOT = ((TAxis*)hTOTvADCL_1->GetXaxis())->GetBinCenter(1);
+      	maxFitRangeTOT = ((TAxis*)hTOTvADCL_1->GetXaxis())->GetBinCenter(nbins-1);
+      	}
+      // fLeftTOT[b] = new TF1(TString::Format("fTOT_Bar%d_L",adcbar),
       // 		      "[0]*sqrt(x-[1]) + [2]",
       // 		      minFitRangeTOT, maxFitRangeTOT);// sqrt fit
       // fLeftTOT[b] = new TF1(TString::Format("fTOT_Bar%f_L",adcbar),
       // 		      "[0]*x + [1] - ([2]/(x-[3]))",
       // 		      minFitRangeTOT, maxFitRangeTOT);// fit from timepix studies
-      fLeftTOT[b] = new TF1(TString::Format("fTOT_Bar%d_L",(Int_t)Thodo::ADCBar[b]),
-			    "[0]*([1]-[2]/x)",
-			    minFitRangeTOT, maxFitRangeTOT);//fit from torch studies
-      fLeftTOT[b]->SetParameter(0,5.);
-      fLeftTOT[b]->SetParameter(1,157.);
-      fLeftTOT[b]->SetParameter(2,105.);
+      fLeftTOT[b] = new TF1(TString::Format("fTOT_Bar%d_L",adcbar),
+      			    "[0]*([1]-[2]/x)",
+      			    minFitRangeTOT, maxFitRangeTOT);//fit from torch studies
+      fLeftTOT[b]->SetParameter(0,0.1);
+      fLeftTOT[b]->SetParameter(1,160.);
+      fLeftTOT[b]->SetParameter(2,5.);
       // fLeftTOT[b]->SetParameter(3,4000);
-      hTOTvADCL_1->Fit(TString::Format("fTOT_Bar%d_L",(Int_t)Thodo::ADCBar[b]),"QR","",minFitRangeTOT, maxFitRangeTOT);
+      hTOTvADCL_1->Fit(TString::Format("fTOT_Bar%d_L",adcbar),"QR","",minFitRangeTOT, maxFitRangeTOT);
       // output fit results to text file
       // left pmts indicated by 0
       tottextfile << b << "\t" << 0 << "\t"
-		  << fLeftTOT[b]->GetParameter(0) << "\t" << fLeftTOT[b]->GetParError(0) << "\t"
-		  << fLeftTOT[b]->GetParameter(1) << "\t" << fLeftTOT[b]->GetParError(1) << "\t"
-		  << fLeftTOT[b]->GetParameter(2) << "\t" << fLeftTOT[b]->GetParError(2) << "\t"
-	// << fLeftTOT[b]->GetParameter(3) << "\t" << fLeftTOT[b]->GetParError(3) << "\t"
-		  << "\n";
+      		  << fLeftTOT[b]->GetParameter(0) << "\t" << fLeftTOT[b]->GetParError(0) << "\t"
+      		  << fLeftTOT[b]->GetParameter(1) << "\t" << fLeftTOT[b]->GetParError(1) << "\t"
+      		  << fLeftTOT[b]->GetParameter(2) << "\t" << fLeftTOT[b]->GetParError(2) << "\t"
+      	// << fLeftTOT[b]->GetParameter(3) << "\t" << fLeftTOT[b]->GetParError(3) << "\t"
+      		  << "\n";
       // sigma of each slice gauss
       rightPadTOT->cd(2);
       gPad->SetTopMargin(0.12);
       gPad->SetLeftMargin(0.15);
-      TH1D *hTOTvADCL_2 = (TH1D*)gDirectory->Get(TString::Format("hTOTvADC_Bar%d_L_%d",(Int_t)Thodo::ADCBar[b],2));
+      TH1D *hTOTvADCL_2 = (TH1D*)gDirectory->Get(TString::Format("hTOTvADC_Bar%d_L_%d",adcbar,2));
       hTOTvADCL_2->Draw();
       // set attributes
       hTOTvADCL_0->SetLineColor(1);
@@ -306,8 +312,8 @@ void FitTOT(const TString InFile="bbhodo_307_500000",
       
       //right pmts
       // set up canvas for this pmt
-      TCanvas *crightTOT = new TCanvas(TString::Format("cTOTFits_Bar%d_R",(Int_t)Thodo::ADCBar[b]),
-      				       TString::Format("cTOTFits_Bar%d_R",(Int_t)Thodo::ADCBar[b]),
+      TCanvas *crightTOT = new TCanvas(TString::Format("cTOTFits_Bar%d_R",adcbar),
+      				       TString::Format("cTOTFits_Bar%d_R",adcbar),
       				       700, 500);
       crightTOT->Divide(2,1);
       TPad *leftPadTOTr = (TPad*)crightTOT->cd(1);
@@ -320,7 +326,7 @@ void FitTOT(const TString InFile="bbhodo_307_500000",
       // draw results
       // constant of each slice gauss
       leftPadTOTr->cd(2);
-      TH1D *hTOTvADCR_0 = (TH1D*)gDirectory->Get(TString::Format("hTOTvADC_Bar%d_R_%d",(Int_t)Thodo::ADCBar[b],0));
+      TH1D *hTOTvADCR_0 = (TH1D*)gDirectory->Get(TString::Format("hTOTvADC_Bar%d_R_%d",adcbar,0));
       hTOTvADCR_0->Draw();
       // mean of each slice gauss
       TPad *rightPadTOTr = (TPad*)crightTOT->cd(2);
@@ -328,7 +334,7 @@ void FitTOT(const TString InFile="bbhodo_307_500000",
       rightPadTOTr->cd(1);
       gPad->SetTopMargin(0.12);
       gPad->SetLeftMargin(0.15);
-      TH1D *hTOTvADCR_1 = (TH1D*)gDirectory->Get(TString::Format("hTOTvADC_Bar%d_R_%d",(Int_t)Thodo::ADCBar[b],1));
+      TH1D *hTOTvADCR_1 = (TH1D*)gDirectory->Get(TString::Format("hTOTvADC_Bar%d_R_%d",adcbar,1));
       hTOTvADCR_1->Draw();
       // fit the means - this callibrates the tot
       Double_t minFitRangeTOTr = 0.0;
@@ -354,13 +360,13 @@ void FitTOT(const TString InFile="bbhodo_307_500000",
       // fRightTOT[b] = new TF1(TString::Format("fTOT_Bar%f_R",adcbar),
       // 		      "[0]*x + [1] - ([2]/(x-[3]))",
       // 		      minFitRangeTOTr, maxFitRangeTOTr);// fit from timepix studies
-      fRightTOT[b] = new TF1(TString::Format("fTOT_Bar%d_R",(Int_t)Thodo::ADCBar[b]),
+      fRightTOT[b] = new TF1(TString::Format("fTOT_Bar%d_R",adcbar),
       			     "[0]*([1]-[2]/x)",
       			     minFitRangeTOTr, maxFitRangeTOTr);//fit from torch studies
-      fRightTOT[b]->SetParameter(0,5.);
-      fRightTOT[b]->SetParameter(1,157.);
-      fRightTOT[b]->SetParameter(2,105.);
-      hTOTvADCR_1->Fit(TString::Format("fTOT_Bar%d_R",(Int_t)Thodo::ADCBar[b]),"QR","",minFitRangeTOTr, maxFitRangeTOTr);
+      fRightTOT[b]->SetParameter(0,0.1);
+      fRightTOT[b]->SetParameter(1,160.);
+      fRightTOT[b]->SetParameter(2,5.);
+      hTOTvADCR_1->Fit(TString::Format("fTOT_Bar%d_R",adcbar),"QR","",minFitRangeTOTr, maxFitRangeTOTr);
       // output fit results to text file
       // right pmts indicated by 1
       tottextfile << b << "\t" << 1 << "\t"
@@ -374,7 +380,7 @@ void FitTOT(const TString InFile="bbhodo_307_500000",
       rightPadTOTr->cd(2);
       gPad->SetTopMargin(0.12);
       gPad->SetLeftMargin(0.15);
-      TH1D *hTOTvADCR_2 = (TH1D*)gDirectory->Get(TString::Format("hTOTvADC_Bar%d_R_%d",(Int_t)Thodo::ADCBar[b],2));
+      TH1D *hTOTvADCR_2 = (TH1D*)gDirectory->Get(TString::Format("hTOTvADC_Bar%d_R_%d",adcbar,2));
       hTOTvADCR_2->Draw();
       // set attributes
       hTOTvADCR_0->SetLineColor(1);
