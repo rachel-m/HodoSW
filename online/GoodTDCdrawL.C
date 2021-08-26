@@ -1,6 +1,6 @@
 void GoodTDCdrawL(Int_t Ch){
 
-  // gPad->SetLogy();
+  gPad->SetLogy();
 
   TString hnameLE = "hGoodLe_Bar";
   hnameLE += Ch;

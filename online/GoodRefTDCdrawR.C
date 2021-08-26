@@ -1,6 +1,6 @@
 void GoodRefTDCdrawR(){
 
-  // gPad->SetLogy();
+  gPad->SetLogy();
 
   TString hnameLE = "hGoodRefLE_R";
   TH1F *hGoodLE = (TH1F*)gDirectory->Get(hnameLE);

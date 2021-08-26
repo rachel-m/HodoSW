@@ -1,6 +1,6 @@
 void RawTDCdrawR(Int_t Ch){
 
-  // gPad->SetLogy();
+  gPad->SetLogy();
 
   TString hnameLE = "hRawLe_Bar";
   hnameLE += Ch;

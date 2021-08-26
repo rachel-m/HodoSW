@@ -1,6 +1,6 @@
 void RawRefTDCdrawL(){
 
-  // gPad->SetLogy();
+  gPad->SetLogy();
 
   TString hnameLE = "hRawRefLE_L";
   TH1F *hRawLE = (TH1F*)gDirectory->Get(hnameLE);
