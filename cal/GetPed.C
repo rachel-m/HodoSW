@@ -20,12 +20,15 @@ const Int_t nAdc = 64;
 const Int_t nBars = 32;
 const Int_t nSide = 2;
 
-//TString REPLAYED_DIR = "/w/work0/home/rachel/HallA/BB_Hodo/cosmicdata/replayed";
-//TString REPLAYED_DIR = "$OUT_DIR";
-TString REPLAYED_DIR = "/adaqfs/home/a-onl/sbs/Rootfiles";                                                                                                                    
-//TString ANALYSED_DIR = "/w/work0/home/rachel/HallA/BB_Hodo/cosmicdata/analysisout";
-//TString ANALYSED_DIR = "$OUT_DIR/bbhodo_hist"; 
+
+TString REPLAYED_DIR = "/adaqfs/home/a-onl/sbs/Rootfiles";
 TString ANALYSED_DIR = "/adaqfs/home/a-onl/sbs/Rootfiles/bbhodo_hist";
+//TString REPLAYED_DIR = "$OUT_DIR";
+//TString ANALYSED_DIR = "$OUT_DIR/bbhodo_hist"; 
+
+// for local analysis at uog (please leave in comments)
+//TString REPLAYED_DIR = "/w/work0/home/rachel/HallA/BB_Hodo/FallRun2021/Replayed";
+//TString ANALYSED_DIR = "/w/work0/home/rachel/HallA/BB_Hodo/FallRun2021/Analysed";
 
 namespace Thodo {
   Int_t NdataAdcBar;
@@ -185,7 +188,7 @@ void GetPed(const TString InFile="bbhodo_307_1000", Int_t nevents=-1,
     if(Thodo::NdataAdcBar!=nBars){
       cout << "ERROR - the number of bars in the sbs-offline root file is not 90"
 	   << endl;
-      exit;
+      exit(0);
     }
     // fill the adc histograms
     for(Int_t bar=0; bar<nBars; bar++){
@@ -232,7 +235,7 @@ void GetPed(const TString InFile="bbhodo_307_1000", Int_t nevents=-1,
     nBinsR = hADCR[bar]->GetNbinsX();
     if(nBinsL!=nBinsR){
       cout << "WARNING - check the hADCL and hADCR nbins matches" << endl;
-      exit;
+      exit(0);
     }
     // left
     binmax =  hADCL[bar]->GetMaximumBin();

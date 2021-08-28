@@ -23,6 +23,10 @@ const Double_t ADCCUT = 150.;//100.0;
 const TString REPLAYED_DIR = "/adaqfs/home/a-onl/sbs/Rootfiles";
 const TString ANALYSED_DIR = "/adaqfs/home/a-onl/sbs/Rootfiles/bbhodo_hist";
 
+// for local analysis at uog (please leave in comments)
+//TString REPLAYED_DIR = "/w/work0/home/rachel/HallA/BB_Hodo/FallRun2021/Replayed";
+//TString ANALYSED_DIR = "/w/work0/home/rachel/HallA/BB_Hodo/FallRun2021/Analysed";
+
 namespace Thodo {
   Int_t NdataTdcBar;
   Double_t TDCBar[nBarsTDC];
