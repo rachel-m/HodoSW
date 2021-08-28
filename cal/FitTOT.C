@@ -22,8 +22,8 @@ const Int_t nTdc = 180;
 const Int_t nBarsTDC = 90;
 const Int_t nSide = 2;
 
-const TString REPLAYED_DIR = "/w/work0/home/rachel/HallA/BB_Hodo/cosmicdata/replayed";
-const TString ANALYSED_DIR = "/w/work0/home/rachel/HallA/BB_Hodo/cosmicdata/analysisout";
+const TString REPLAYED_DIR = "/adaqfs/home/a-onl/sbs/Rootfiles";
+const TString ANALYSED_DIR = "/adaqfs/home/a-onl/sbs/Rootfiles/bbhodo_hist";
 
 namespace Thodo {
   Int_t NdataAdcBar;

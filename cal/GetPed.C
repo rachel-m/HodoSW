@@ -20,8 +20,10 @@ const Int_t nAdc = 64;
 const Int_t nBars = 32;
 const Int_t nSide = 2;
 
-TString REPLAYED_DIR = "/w/work0/home/rachel/HallA/BB_Hodo/cosmicdata/replayed";
-TString ANALYSED_DIR = "/w/work0/home/rachel/HallA/BB_Hodo/cosmicdata/analysisout";
+//TString REPLAYED_DIR = "/w/work0/home/rachel/HallA/BB_Hodo/cosmicdata/replayed";
+TString REPLAYED_DIR = "/adaqfs/home/a-onl/sbs/Rootfiles";
+//TString ANALYSED_DIR = "/w/work0/home/rachel/HallA/BB_Hodo/cosmicdata/analysisout";
+TString ANALYSED_DIR = "/adaqfs/home/a-onl/sbs/Rootfiles/bbhodo_hist"; 
 
 namespace Thodo {
   Int_t NdataAdcBar;
