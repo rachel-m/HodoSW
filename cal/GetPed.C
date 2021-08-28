@@ -21,9 +21,11 @@ const Int_t nBars = 32;
 const Int_t nSide = 2;
 
 //TString REPLAYED_DIR = "/w/work0/home/rachel/HallA/BB_Hodo/cosmicdata/replayed";
-TString REPLAYED_DIR = "/adaqfs/home/a-onl/sbs/Rootfiles";
+//TString REPLAYED_DIR = "$OUT_DIR";
+TString REPLAYED_DIR = "/adaqfs/home/a-onl/sbs/Rootfiles";                                                                                                                    
 //TString ANALYSED_DIR = "/w/work0/home/rachel/HallA/BB_Hodo/cosmicdata/analysisout";
-TString ANALYSED_DIR = "/adaqfs/home/a-onl/sbs/Rootfiles/bbhodo_hist"; 
+//TString ANALYSED_DIR = "$OUT_DIR/bbhodo_hist"; 
+TString ANALYSED_DIR = "/adaqfs/home/a-onl/sbs/Rootfiles/bbhodo_hist";
 
 namespace Thodo {
   Int_t NdataAdcBar;
@@ -32,7 +34,7 @@ namespace Thodo {
   Double_t ADCValL[nBars];
   Int_t NdataAdcR;
   Double_t ADCValR[nBars];
-  Int_t ADCBarOff[nBars];
+  //  Int_t ADCBarOff[nBars];
 };
 
 TChain *T = 0;
@@ -70,7 +72,7 @@ void GetPed(const TString InFile="bbhodo_307_1000", Int_t nevents=-1,
   T->SetBranchAddress("bb.hodoadc.adcbarid",Thodo::ADCBar);
   T->SetBranchAddress("bb.hodoadc.L.a",Thodo::ADCValL);
   T->SetBranchAddress("bb.hodoadc.R.a",Thodo::ADCValR);
-  T->SetBranchAddress("bb.hodoadc.adcbaroff",Thodo::ADCBarOff);
+  //  T->SetBranchAddress("bb.hodoadc.adcbaroff",Thodo::ADCBarOff);
   // enable vector size branches
   T->SetBranchStatus("Ndata.bb.hodoadc.*",1);
   T->SetBranchAddress("Ndata.bb.hodoadc.adcbarid",&Thodo::NdataAdcBar);

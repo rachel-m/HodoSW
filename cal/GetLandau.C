@@ -30,7 +30,7 @@ namespace Thodo {
   Double_t ADCValL[nBars];
   Int_t NdataAdcR;
   Double_t ADCValR[nBars];
-  Int_t ADCBarOff[nBars];
+  //  Int_t ADCBarOff[nBars];
 };
 
 TChain *T = 0;
@@ -66,7 +66,7 @@ void GetLandau(const TString InFile="bbhodo_307_1000", Int_t nevents=-1,
     T->SetBranchAddress("bb.hodoadc.adcbarid",Thodo::ADCBar);
     T->SetBranchAddress("bb.hodoadc.L.ap",Thodo::ADCValL);
     T->SetBranchAddress("bb.hodoadc.R.ap",Thodo::ADCValR);
-    T->SetBranchAddress("bb.hodoadc.adcbaroff",Thodo::ADCBarOff);
+    // T->SetBranchAddress("bb.hodoadc.adcbaroff",Thodo::ADCBarOff);
     // enable vector size branches
     T->SetBranchStatus("Ndata.bb.hodoadc.*",1);
     T->SetBranchAddress("Ndata.bb.hodoadc.adcbarid",&Thodo::NdataAdcBar);

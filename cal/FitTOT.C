@@ -32,7 +32,7 @@ namespace Thodo {
   Double_t ADCValL[nBarsADC];
   Int_t NdataAdcR;
   Double_t ADCValR[nBarsADC];
-  Int_t ADCBarOff[nBarsADC];
+  //  Int_t ADCBarOff[nBarsADC];
 
 // this assumes one tdc hit per bar was selected in sbsoffline(!)
   Int_t NdataTdcBar;
@@ -77,7 +77,7 @@ void FitTOT(const TString InFile="bbhodo_307_500000",
     // T->SetBranchAddress("bb.hodoadc.R.ap",Thodo::ADCValR);
     T->SetBranchAddress("bb.hodoadc.L.a",Thodo::ADCValL);
     T->SetBranchAddress("bb.hodoadc.R.a",Thodo::ADCValR);
-    T->SetBranchAddress("bb.hodoadc.adcbaroff",Thodo::ADCBarOff);
+    //T->SetBranchAddress("bb.hodoadc.adcbaroff",Thodo::ADCBarOff);
     T->SetBranchStatus("bb.hodotdc.*",1);
     T->SetBranchAddress("bb.hodotdc.tdcbarid",Thodo::TDCBar);
     T->SetBranchAddress("bb.hodotdc.L.tot",Thodo::TDCTotL);

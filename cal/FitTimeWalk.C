@@ -40,7 +40,7 @@ namespace Thodo {
   Double_t ADCValL[nBarsADC];
   Int_t NdataAdcR;
   Double_t ADCValR[nBarsADC];
-  Int_t ADCBarOff[nBarsADC];
+  //  Int_t ADCBarOff[nBarsADC];
 };
 
 TChain *T = 0;
@@ -85,7 +85,7 @@ void FitTimeWalk(const TString InFile="bbhodo_306_1000000", Int_t nevents=-1,
       // T->SetBranchAddress("bb.hodoadc.R.ap",Thodo::ADCValR);
       T->SetBranchAddress("bb.hodoadc.L.a",Thodo::ADCValL);
       T->SetBranchAddress("bb.hodoadc.R.a",Thodo::ADCValR);
-      T->SetBranchAddress("bb.hodoadc.adcbaroff",Thodo::ADCBarOff);
+      //  T->SetBranchAddress("bb.hodoadc.adcbaroff",Thodo::ADCBarOff);
     }
 
     // enable vector size branches
