@@ -21,8 +21,13 @@ const Int_t nBarsTDC = 90;
 const Int_t nBarsADC = 32;
 const Double_t ADCCUT = 150.;//100.0;
 
-const TString REPLAYED_DIR = "/adaqfs/home/a-onl/sbs/Rootfiles";
-const TString ANALYSED_DIR = "/adaqfs/home/a-onl/sbs/Rootfiles/bbhodo_hist";
+// const TString REPLAYED_DIR = "/adaqfs/home/a-onl/sbs/Rootfiles";
+// const TString ANALYSED_DIR = "/adaqfs/home/a-onl/sbs/Rootfiles/bbhodo_hist";
+
+// // for local analysis at uog (please leave in comments)
+TString REPLAYED_DIR = "/w/work0/home/rachel/HallA/BB_Hodo/FallRun2021/Replayed";
+TString ANALYSED_DIR = "/w/work0/home/rachel/HallA/BB_Hodo/FallRun2021/Analysed";
+
 
 namespace Thodo {
   Int_t NdataMult;
@@ -215,9 +220,9 @@ void PlotRawTDC(const TString InFile="bbhodo_311_1000000", Int_t nevents=-1){
       for(Int_t tdc=0; tdc<Thodo::NdataMult; tdc++){
       	hMultiplicity->Fill(Thodo::TDCmult[tdc]);
       	if((Int_t)Thodo::RawElID[tdc]<90)//left
-      	  hMultiplicityL[tdc]->Fill(Thodo::TDCmult[tdc]);
+      	  hMultiplicityL[(Int_t)Thodo::RawElID[tdc]]->Fill(Thodo::TDCmult[tdc]);
       	else
-      	  hMultiplicityR[tdc-90]->Fill(Thodo::TDCmult[tdc]);
+      	  hMultiplicityR[(Int_t)Thodo::RawElID[tdc]-90]->Fill(Thodo::TDCmult[tdc]);
       }// element loop
       //ref
       for(Int_t ref=0; ref<(Int_t)Thodo::NdataRawRefHitLE; ref++){
