@@ -21,12 +21,12 @@ const Int_t nBarsTDC = 90;
 const Int_t nBarsADC = 32;
 const Double_t ADCCUT = 150.;//100.0;
 
-// const TString REPLAYED_DIR = "/adaqfs/home/a-onl/sbs/Rootfiles";
-// const TString ANALYSED_DIR = "/adaqfs/home/a-onl/sbs/Rootfiles/bbhodo_hist";
+const TString REPLAYED_DIR = "/adaqfs/home/a-onl/sbs/Rootfiles";
+const TString ANALYSED_DIR = "/adaqfs/home/a-onl/sbs/Rootfiles/bbhodo_hist";
 
 // // for local analysis at uog (please leave in comments)
-TString REPLAYED_DIR = "/w/work0/home/rachel/HallA/BB_Hodo/FallRun2021/Replayed";
-TString ANALYSED_DIR = "/w/work0/home/rachel/HallA/BB_Hodo/FallRun2021/Analysed";
+//TString REPLAYED_DIR = "/w/work0/home/rachel/HallA/BB_Hodo/FallRun2021/Replayed";
+//TString ANALYSED_DIR = "/w/work0/home/rachel/HallA/BB_Hodo/FallRun2021/Analysed";
 
 
 namespace Thodo {
@@ -79,7 +79,7 @@ void PlotRawTDC(const TString InFile="bbhodo_311_1000000", Int_t nevents=-1){
     // enable branches
     T->SetBranchStatus("bb.hodotdc.*",1);
     T->SetBranchAddress("bb.hodotdc.tdc_mult",Thodo::TDCmult);
-    T->SetBranchAddress("bb.hodotdc.hits.elemID",Thodo::RawElID);
+    T->SetBranchAddress("bb.hodotdc.hits.TDCelemID",Thodo::RawElID);
     T->SetBranchAddress("bb.hodotdc.hits.t",Thodo::RawElLE);
     T->SetBranchAddress("bb.hodotdc.hits.t_te",Thodo::RawElTE);
     T->SetBranchAddress("bb.hodotdc.hits.t_tot",Thodo::RawElTot);
@@ -90,7 +90,7 @@ void PlotRawTDC(const TString InFile="bbhodo_311_1000000", Int_t nevents=-1){
 
     // enable vector size branches
     T->SetBranchAddress("Ndata.bb.hodotdc.tdc_mult",&Thodo::NdataMult); 
-    T->SetBranchAddress("Ndata.bb.hodotdc.hits.elemID",&Thodo::NdataRawElID); 
+    T->SetBranchAddress("Ndata.bb.hodotdc.hits.TDCelemID",&Thodo::NdataRawElID); 
     T->SetBranchAddress("Ndata.bb.hodotdc.hits.t",&Thodo::NdataRawLE); 
     T->SetBranchAddress("Ndata.bb.hodotdc.hits.t_te",&Thodo::NdataRawTE); 
     T->SetBranchAddress("Ndata.bb.hodotdc.hits.t_tot",&Thodo::NdataRawTot); 
