@@ -1,4 +1,3 @@
-#if !defined(__CLING__) || defined(__ROOTCLING__)
 #include <iostream>
 
 #include "TSystem.h"
@@ -6,26 +5,24 @@
 #include "TFile.h"
 
 #include "THaShower.h"
+#include "THaEvent.h"
 #include "THaEvData.h"
 #include "THaRun.h"
 #include "THaAnalyzer.h"
 #include "THaVarList.h"
 
 #include "SBSBigBite.h"
+#include "SBSBBTotalShower.h"
 #include "SBSBBShower.h"
 #include "SBSTimingHodoscope.h"
-//#include "SBSTimingHodoscopeBar.h"
-#include "SBSTimingHodoscopePMT.h"
-
-#endif
 
 // Simple example replay script
 //
 // Ole Hansen, 11 April 2016
-void replay_bbhodo(int run_number = 307, uint nev = -1, uint nseg = 0)
+void replay_BBHodoRaw(int run_number = 124, uint nev = -1, uint nseg = 0)
 {
   //load SBS-offline
-  gSystem->Load("libsbs.so");
+  //gSystem->Load("libsbs.so");
   //--- Define the experimental configuration, i.e. spectrometers, detectors ---
 
   //THaHRS* bb = new THaHRS("R", "Right HRS" );
@@ -62,51 +59,42 @@ void replay_bbhodo(int run_number = 307, uint nev = -1, uint nseg = 0)
   string combined(string(firstname)+endname);
    const char* RunFileNamePattern = combined.c_str();
   vector<TString> pathList;
-  pathList.push_back("/w/work0/home/rachel/HallA/BB_Hodo/cosmicdata");
-  // pathList.push_back(".");
-  // pathList.push_back(Form("%s/data","../.."));
+  pathList.push_back(".");
+  pathList.push_back(Form("%s/data",".."));
 
-
-  THaRun* run = new THaRun( pathList, Form(RunFileNamePattern, run_number) );
-
-  run->SetDataRequired(7);//for the time being
-  
-  cout << "Number of events to replay (-1=all)? ";
-  if( nev > 0 )
+   THaAnalyzer* analyzer = new THaAnalyzer;
+THaEvent* event = new THaEvent;
+  THaRun* run = 0;
+  int seg = 0;
+  bool seg_ok = true;
+  while(seg_ok) {
+    TString data_fname;
+    data_fname = TString::Format("%s/bbhodo_%d.evio.%d",getenv("DATA_DIR"),run_number,seg);
+ //new THaRun( pathList, Form(RunFileNamePattern, run_number) );
+    std::cout << "Looking for segment " << seg << " file " << data_fname.Data() << std::endl;
+    if( gSystem->AccessPathName(data_fname)) {
+      seg_ok = false;
+      std::cout << "Segment " << seg << " not found. Exiting" << std::endl;
+      continue;
+    }
+   run = new THaRun(data_fname);
     run->SetLastEvent(nev);
+
+  run->SetDataRequired(0);//for the time being
+   run->SetDate(TDatime());
   
-  //--- Set up any physics calculations we want to do ---
-
-  // Extract the reconstructed target quantities of the golden track
-  // Not really a physics calculation, but a convenience function.
-  // It effectively converts the L.tr.* variables, which are arrays, 
-  // to scalers L.gold.*
-
-  //gHaPhysics->Add( new THaGoldenTrack( "R.gold", "RHRS golden track", "R" ));
-
-  // Single-arm electron kinematics for the one spectrometer we have set up.
-  // We assume a carbon-12 target (12 AMU)
-  //gHaPhysics->Add( new THaPrimaryKine( "R.ekine", "RHRS electron kinematics",
-  //"R", 0.511e-3, 12*0.9315 ));
-
-  // Vertex position calculated from RHRS golden track and ideal beam
-  // (will poor resolution if raster is on)
-  //gHaPhysics->Add( new THaReactionPoint( "R.vx", "Vertex R", "R", "IB" ));
-
-  //--- Define what we want the analyzer to do ---
-  // The only mandatory items are the output definition and output file names
   
-  THaAnalyzer* analyzer = new THaAnalyzer;
 
+  analyzer->SetEvent( event );
   TString out_dir = gSystem->Getenv("OUT_DIR");
   if( out_dir.IsNull() )  out_dir = ".";
   TString out_file = out_dir + "/" + exp + Form("_%d_%d.root", run_number,nev);
 
   analyzer->SetOutFile( out_file );
   
-  analyzer->SetCutFile( "replay_hodo.cdef" );
-  analyzer->SetOdefFile( "replay_hodo.odef" );
-
+  analyzer->SetCutFile( "replay.cdef" );
+  //  analyzer->SetOdefFile( "replay.odef" );
+  analyzer->SetOdefFile( "replayhodo.odef" );
   analyzer->SetVerbosity(2);  // write cut summary to stdout
   analyzer->EnableBenchmarks();
 
@@ -119,6 +107,11 @@ void replay_bbhodo(int run_number = 307, uint nev = -1, uint nseg = 0)
   
 
   analyzer->Process(run);
+    // Cleanup this run segment
+    delete run;
+    
+    seg++; // Increment for next search
+ }
 
   // Clean up
 

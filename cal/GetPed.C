@@ -45,7 +45,7 @@ TChain *T = 0;
 using namespace std;
 
 void GetPed(const TString InFile="bbhodo_307_1000", Int_t nevents=-1,
-	    Double_t GaussSigma=7.0, Double_t FitRange=3.0, Double_t Cut = 3.0,
+	    Double_t GaussSigma=7.0, Double_t FitRange=10.0, Double_t Cut = 3.0,
 	    Int_t HistRange=300){
   // InFile is the input file without absolute path and without .root suffix
   // nevents is how many events to analyse, -1 for all

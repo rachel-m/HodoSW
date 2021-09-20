@@ -1,4 +1,3 @@
-#if !defined(__CLING__) || defined(__ROOTCLING__)
 #include <iostream>
 
 #include "TSystem.h"
@@ -14,18 +13,14 @@
 #include "SBSBigBite.h"
 #include "SBSBBShower.h"
 #include "SBSTimingHodoscope.h"
-//#include "SBSTimingHodoscopeBar.h"
-#include "SBSTimingHodoscopePMT.h"
-
-#endif
 
 // Simple example replay script
 //
 // Ole Hansen, 11 April 2016
-void replay_bbhodo(int run_number = 307, uint nev = -1, uint nseg = 0)
+void replay_bbhodo(int run_number = 124, uint nev = -1, uint nseg = 0)
 {
   //load SBS-offline
-  gSystem->Load("libsbs.so");
+  //gSystem->Load("libsbs.so");
   //--- Define the experimental configuration, i.e. spectrometers, detectors ---
 
   //THaHRS* bb = new THaHRS("R", "Right HRS" );
@@ -61,9 +56,8 @@ void replay_bbhodo(int run_number = 307, uint nev = -1, uint nseg = 0)
   string combined(string(firstname)+endname);
    const char* RunFileNamePattern = combined.c_str();
   vector<TString> pathList;
-  pathList.push_back("/w/work0/home/rachel/HallA/BB_Hodo/cosmicdata");
-  // pathList.push_back(".");
-  // pathList.push_back(Form("%s/data","../.."));
+  pathList.push_back(".");
+  pathList.push_back(Form("%s/data",".."));
 
 
   THaRun* run = new THaRun( pathList, Form(RunFileNamePattern, run_number) );
