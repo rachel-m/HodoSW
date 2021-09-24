@@ -6,8 +6,8 @@ bb.hodotdc.detmap =
 ##  2     2   127  127    -1 ## First channel is reference channel (per the code)
 ##  2     3   127  127    -1 ## First channel is reference channel (per the code)
 ## Detmap for the TDCs
-  2     2     0    127     0 ## 127 channels (Left  PMTs) with reference index
-  2     3     0    127     1 ## 127 channels (Right PMTs) with reference index
+  5     2     0    127     0 ## 127 channels (Left  PMTs) with reference index
+  5     3     0    127     1 ## 127 channels (Right PMTs) with reference index
 
 bb.hodotdc.chanmap = 
 	 0   1   2   3   4   5   6   7   8   9  10  11  12  13  14     15  
