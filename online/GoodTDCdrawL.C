@@ -7,8 +7,13 @@ void GoodTDCdrawL(Int_t Ch){
   hnameLE +="_L";
   TH1F *hLE = (TH1F*)gDirectory->Get(hnameLE);
   hLE->SetLineColor(2);
-  hLE->GetXaxis()->SetLabelSize(0.07);
-  hLE->SetTitleSize(16);
+  TString title = "Bar ";
+  title += Ch;
+  hLE->SetTitle(title);
+  hLE->SetTitleSize(19);
+  // hRawLE->GetXaxis()->SetLabelSize(0.04);
+  hLE->GetXaxis()->SetTitle("Time (ns)");
+  hLE->GetXaxis()->SetTitleSize(0.04);
   hLE->Draw();
   
   TString hnameTE = "hGoodTe_Bar";
@@ -16,8 +21,6 @@ void GoodTDCdrawL(Int_t Ch){
   hnameTE +="_L";
   TH1F *hTE = (TH1F*)gDirectory->Get(hnameTE);
   hTE->SetLineColor(4);
-  hTE->GetXaxis()->SetLabelSize(0.07);
-  hTE->SetTitleSize(16);
   hTE->Draw("sames");
   
 }// macro end

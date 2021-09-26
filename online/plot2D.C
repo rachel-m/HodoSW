@@ -108,15 +108,15 @@ void plot2D( TString fname = "bbhodo_143_-1.root", Int_t nplot = 5000000000 )
   c4->Divide(2,1);
   c4->cd(1);//->SetLogz(1);
   T->Draw("bb.hodotdc.tdcbarid:bb.hodotdc.barmeantime >>hbtL","Ndata.bb.hodotdc.tdcbarid!=0","colz",nplot);
-  hbtL->GetXaxis()->SetTitle("Paddle Mean Time [ns]");
-  hbtL->GetYaxis()->SetTitle("Paddle Number");
+  hbtL->GetXaxis()->SetTitle("Bar Mean Time [ns]");
+  hbtL->GetYaxis()->SetTitle("Bar Number");
 
   c4->cd(2);
   hbt1 = (TH1F*)hpmultR->ProjectionY();
   hbt1->SetLineWidth(2);
   hbt1->SetLineColor(4);
   hbt1->Draw("");
-  hbt1->GetXaxis()->SetTitle("Paddle / PMT Number");
+  hbt1->GetXaxis()->SetTitle("Bar / PMT Number");
   hbt1->Sumw2();
 
   T->Draw("bb.hodotdc.tdcbarid >>hbt2","Ndata.bb.hodotdc.tdcbarid!=0","same",nplot);
@@ -174,13 +174,13 @@ void plot2D( TString fname = "bbhodo_143_-1.root", Int_t nplot = 5000000000 )
 
   // ---------------------------------------------------------------------------------------------
 
-  c1->Print("bbhodo1.pdf");
-  c2->Print("bbhodo2.pdf");
-  c3->Print("bbhodo3.pdf");
-  c4->Print("bbhodo4.pdf");
-  //  c5->Print("bbhodo5.pdf");
-  gSystem->Exec("pdfunite bbhodo*.pdf OnlineBBHodo2D.pdf"); 
-  gSystem->Exec("rm bbhodo*.pdf"); 
+  // c1->Print("bbhodo1.pdf");
+  // c2->Print("bbhodo2.pdf");
+  // c3->Print("bbhodo3.pdf");
+  // c4->Print("bbhodo4.pdf");
+  // //  c5->Print("bbhodo5.pdf");
+  // gSystem->Exec("pdfunite bbhodo*.pdf OnlineBBHodo2D.pdf"); 
+  // gSystem->Exec("rm bbhodo*.pdf"); 
 
 
 }

@@ -7,7 +7,14 @@ void RawTDCdrawR(Int_t Ch){
   hnameLE +="_R";
   TH1D *hRawLE = (TH1D*)gDirectory->Get(hnameLE);
   hRawLE->SetLineColor(2);
-  hRawLE->GetXaxis()->SetLabelSize(0.06);
+  // hRawLE->SetTitle("");
+  TString title = "Bar ";
+  title += Ch;
+  hRawLE->SetTitle(title);
+  hRawLE->SetTitleSize(19);
+  // hRawLE->GetXaxis()->SetLabelSize(0.04);
+  hRawLE->GetXaxis()->SetTitle("Time (ns)");
+  hRawLE->GetXaxis()->SetTitleSize(0.04);
   hRawLE->Draw();
   
   TString hnameTE = "hRawTe_Bar";

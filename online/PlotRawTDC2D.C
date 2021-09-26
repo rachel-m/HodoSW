@@ -14,6 +14,10 @@
 #include <TChain.h>
 #include <TCanvas.h>
 #include <TLegend.h>
+#include <TSystem.h>
+#include <TLatex.h>
+
+#include "plot2D.C"
 
 const Int_t nTdc = 180;
 const Int_t nRef = 2;
@@ -25,10 +29,8 @@ const Double_t ADCCUT = 150.;//100.0;
 // const TString ANALYSED_DIR = "/adaqfs/home/a-onl/sbs/Rootfiles/bbhodo_hist";
 
 // // for local analysis at uog (please leave in comments)
-//TString REPLAYED_DIR = "/w/work0/home/rachel/HallA/BB_Hodo/FallRun2021/Replayed";
-//TString ANALYSED_DIR = "/w/work0/home/rachel/HallA/BB_Hodo/FallRun2021/Analysed";
-// TString REPLAYED_DIR = "/w/work2/jlab/halla/sbs_hodo/Rootfiles";
-TString REPLAYED_DIR = "/w/work0/home/rachel/HallA/BB_Hodo/FallRun2021/Replayed";
+// TString REPLAYED_DIR = "/w/work0/home/rachel/HallA/BB_Hodo/FallRun2021/Replayed";
+TString REPLAYED_DIR = "/w/work2/jlab/halla/sbs_hodo/Rootfiles";
 TString ANALYSED_DIR = "/w/work0/home/rachel/HallA/BB_Hodo/FallRun2021/Analysed";
 
 
@@ -59,20 +61,20 @@ TChain *T = 0;
 
 using namespace std;
 
-void PlotRawTDC(const TString InFile="bbhodo_311_1000000", Int_t nevents=-1){
+void PlotRawTDC2D(const TString InFile="bbhodo_311_1000000", Int_t nevents=-1){
   // InFile is the input file without absolute path and without .root suffix
   // nevents is how many events to analyse, -1 for all
   
   // To execute
   // root -l
-  // .L PlotRawTDC.C+
-  // PlotRawTDC("filename", -1)
+  // .L PlotRawTDC2D.C+
+  // PlotRawTDC2D("filename", -1)
 
 
-
+    TString sInFile = REPLAYED_DIR + "/" + InFile + ".root";
   //========================================================= Get data from tree
   if(!T) { 
-    TString sInFile = REPLAYED_DIR + "/" + InFile + ".root";
+    // TString sInFile = REPLAYED_DIR + "/" + InFile + ".root";
     cout << "Adding " << sInFile << endl;
     T = new TChain("T");
     T->Add(sInFile);
@@ -125,8 +127,8 @@ void PlotRawTDC(const TString InFile="bbhodo_311_1000000", Int_t nevents=-1){
   //===================================================== Histogram Declarations
   // number of histo bins
   Int_t NTDCBins = 100;
-  Double_t TDCBinLow = -4000.0;//-400.;
-  Double_t TDCBinHigh = 4000.0;//400.;
+  Double_t TDCBinLow = -100;//-400.;
+  Double_t TDCBinHigh = 700;//400.;
   Int_t NTotBins = 50;
   Double_t TotBinLow = 0.;
   Double_t TotBinHigh = 200.;
@@ -184,10 +186,10 @@ void PlotRawTDC(const TString InFile="bbhodo_311_1000000", Int_t nevents=-1){
   for(Int_t ref=0; ref<nRef; ref++){
     hRawRefLE[ref] = new TH1F(TString::Format("hRawRefLE_%s",side[ref].Data()),
 			      TString::Format("hRawRefLE_%s",side[ref].Data()),
-			      200,0,4000);
+			      400,0,1000);
     hRawRefTE[ref] = new TH1F(TString::Format("hRawRefTE_%s",side[ref].Data()),
 			      TString::Format("hRawRefTE_%s",side[ref].Data()),
-			      200,0,4000);
+			      400,0,1000);
     hRefMult[ref] =  new TH1F(TString::Format("hRefMult_%s",side[ref].Data()),
 			       TString::Format("hRefMult_%s",side[ref].Data()),
 			       10,0,10);
@@ -244,58 +246,130 @@ void PlotRawTDC(const TString InFile="bbhodo_311_1000000", Int_t nevents=-1){
 
   //========================================================== Write histos
   for(Int_t b=0; b<nBarsTDC; b++){
-    hRawLeL[b]->GetXaxis()->SetLabelSize(0.06);
+    // hRawLeL[b]->GetXaxis()->SetLabelSize(0.06);
     hRawLeL[b]->GetXaxis()->SetTitle("time (ns)");
-    hRawLeL[b]->GetXaxis()->SetTitleSize(0.05);
+    // hRawLeL[b]->GetXaxis()->SetTitleSize(0.05);
     hRawLeL[b]->Write();
-    hRawLeR[b]->GetXaxis()->SetLabelSize(0.06);
+    // hRawLeR[b]->GetXaxis()->SetLabelSize(0.06);
     hRawLeR[b]->GetXaxis()->SetTitle("time (ns)");
-    hRawLeR[b]->GetXaxis()->SetTitleSize(0.05);
+    // hRawLeR[b]->GetXaxis()->SetTitleSize(0.05);
     hRawLeR[b]->Write();
-    hRawTeL[b]->GetXaxis()->SetLabelSize(0.06);
+    // hRawTeL[b]->GetXaxis()->SetLabelSize(0.06);
     hRawTeL[b]->GetXaxis()->SetTitle("time (ns)");
-    hRawTeL[b]->GetXaxis()->SetTitleSize(0.05);
+    // hRawTeL[b]->GetXaxis()->SetTitleSize(0.05);
     hRawTeL[b]->Write();
-    hRawTeR[b]->GetXaxis()->SetLabelSize(0.06);
+    // hRawTeR[b]->GetXaxis()->SetLabelSize(0.06);
     hRawTeR[b]->GetXaxis()->SetTitle("time (ns)");
-    hRawTeR[b]->GetXaxis()->SetTitleSize(0.05);
+    // hRawTeR[b]->GetXaxis()->SetTitleSize(0.05);
     hRawTeR[b]->Write();
-    hRawTotL[b]->GetXaxis()->SetLabelSize(0.06);
+    // hRawTotL[b]->GetXaxis()->SetLabelSize(0.06);
     hRawTotL[b]->GetXaxis()->SetTitle("tot (ns)");
-    hRawTotL[b]->GetXaxis()->SetTitleSize(0.05);
+    // hRawTotL[b]->GetXaxis()->SetTitleSize(0.05);
     hRawTotL[b]->Write();
-    hRawTotR[b]->GetXaxis()->SetLabelSize(0.06);
+    // hRawTotR[b]->GetXaxis()->SetLabelSize(0.06);
     hRawTotR[b]->GetXaxis()->SetTitle("tot (ns)");
-    hRawTotR[b]->GetXaxis()->SetTitleSize(0.05);
+    // hRawTotR[b]->GetXaxis()->SetTitleSize(0.05);
     hRawTotR[b]->Write();
-    hMultiplicityL[b]->GetXaxis()->SetLabelSize(0.06);
-    hMultiplicityL[b]->GetXaxis()->SetTitle("tdc hit multiplicity");
+    // hMultiplicityL[b]->GetXaxis()->SetLabelSize(0.06);
+    hMultiplicityL[b]->GetXaxis()->SetTitle("left tdc ref hit mult");
     hMultiplicityL[b]->Write();
-    hMultiplicityR[b]->GetXaxis()->SetLabelSize(0.06);
-    hMultiplicityR[b]->GetXaxis()->SetTitle("tdc hit multiplicity");
+    // hMultiplicityR[b]->GetXaxis()->SetLabelSize(0.06);
+    hMultiplicityR[b]->GetXaxis()->SetTitle("right tdc ref hit mult");
     hMultiplicityR[b]->Write();
   }
-  hMultiplicity->GetXaxis()->SetLabelSize(0.06);
+  // hMultiplicity->GetXaxis()->SetLabelSize(0.06);
   hMultiplicity->GetXaxis()->SetTitle("tdc hit multiplicity");
   hMultiplicity->Write();
-  hHitPMTL->GetXaxis()->SetLabelSize(0.06);
-  hHitPMTL->GetXaxis()->SetTitle("Bar");
+  // hHitPMTL->GetXaxis()->SetLabelSize(0.06);
+  hHitPMTL->GetXaxis()->SetTitle("Bar ID of Left PMT Hit");
+  hHitPMTL->SetTitle("");
   hHitPMTL->Write();
-  hHitPMTR->GetXaxis()->SetLabelSize(0.06);
-  hHitPMTR->GetXaxis()->SetTitle("Bar");
+  // hHitPMTR->GetXaxis()->SetLabelSize(0.06);
+  hHitPMTR->GetXaxis()->SetTitle("Bar ID of Right PMT Hit");
+  hHitPMTR->SetTitle("");
   hHitPMTR->Write();
   // ref histos
   for(Int_t rr=0; rr<nRef; rr++){
-    hRawRefLE[rr]->GetXaxis()->SetTitle("time (ns)");
-    hRawRefLE[rr]->GetXaxis()->SetLabelSize(0.06);
+    if(rr==0)
+      hRawRefLE[rr]->GetXaxis()->SetTitle("Left TDC Ref LE Time (ns)");
+    else 
+      hRawRefLE[rr]->GetXaxis()->SetTitle("Right TDC Ref LE Time (ns)");
+    // hRawRefLE[rr]->GetXaxis()->SetLabelSize(0.06);
+    hRawRefLE[rr]->SetTitle("");
     hRawRefLE[rr]->Write();
-    hRawRefTE[rr]->GetXaxis()->SetTitle("time (ns)");
-    hRawRefTE[rr]->GetXaxis()->SetLabelSize(0.06);
+    if(rr==0)
+      hRawRefTE[rr]->GetXaxis()->SetTitle("Left TDC Ref TE Time (ns)");
+    else 
+      hRawRefTE[rr]->GetXaxis()->SetTitle("Right TDC Ref TE Time (ns)");
+    // hRawRefTE[rr]->GetXaxis()->SetLabelSize(0.06);
+    hRawRefTE[rr]->SetTitle("");
     hRawRefTE[rr]->Write();
-    hRefMult[rr]->GetXaxis()->SetTitle("tdc hit multiplicity");
-    hRefMult[rr]->GetXaxis()->SetLabelSize(0.06);
+    if(rr==0)
+      hRefMult[rr]->GetXaxis()->SetTitle("Left TDC Ref Multiplicity");
+    else
+      hRefMult[rr]->GetXaxis()->SetTitle("Right TDC Ref Multiplicity");
+    // hRefMult[rr]->GetXaxis()->SetLabelSize(0.06);
+    hRefMult[rr]->SetTitle("");
     hRefMult[rr]->Write();
   }
+
+  // TString soptions = ;
+  // gROOT->ProcessLine(.x plot2D.C);
+  //========================================================== Plot 2D graphs
+  // process the plot2D macro to add in the 2D graphs
+  plot2D(sInFile,nevents);
+  TH2F *hptL;
+  gDirectory->GetObject("hptL",hptL);
+  TH2F *hptR;
+  gDirectory->GetObject("hptR",hptR);
+  TH2F *hptotL;
+  gDirectory->GetObject("hptotL",hptotL);
+  TH2F *hptotR;
+  gDirectory->GetObject("hptotR",hptotR);
+  TH2F *hpmultL;
+  gDirectory->GetObject("hpmultL",hpmultL);
+  TH2F *hpmultR;
+  gDirectory->GetObject("hpmultR",hpmultR);
+  TH2F *hbtL;
+  gDirectory->GetObject("hbtL",hbtL);
+
+
+  TH1F* hbt1cop = new TH1F("hbt1cop","", 95,0,94);
+  // // TH1F* hbt2 = new TH1F("hbt2","", 95,0,94);
+  TH1F* hbt3cop = new TH1F("hbt3cop","", 95,0,94);
+  hbt1cop = (TH1F*)hpmultR->ProjectionY();
+  hbt1cop->SetLineWidth(2);
+  hbt1cop->SetLineColor(4);
+  // // hbt1->Draw("");
+  hbt1cop->GetXaxis()->SetTitle("Paddle / PMT Number");
+  hbt1cop->Sumw2();
+  TH1F *hbt2;
+  gDirectory->GetObject("hbt2",hbt2);
+  hbt3cop = (TH1F*)hpmultL->ProjectionY();
+  hbt3cop->SetLineColor(2);
+  hbt3cop->SetLineWidth(2);
+  // hbt3->Draw("same");
+  hbt3cop->Sumw2();
+
+
+  // TH1F *hbt1;
+  // gDirectory->GetObject("hbt1",hbt1);
+  // TH1F *hbt2;
+  // gDirectory->GetObject("hbt2",hbt2);
+  // TH1F *hbt3;
+  // gDirectory->GetObject("hbt3",hbt3);
+
+  f->cd();
+  hptL->Write();
+  hptR->Write();
+  hptotL->Write();
+  hptotR->Write();
+  hpmultL->Write();
+  hpmultR->Write();
+  hbtL->Write();
+  hbt1cop->Write();
+  hbt2->Write();
+  hbt3cop->Write();
 
 
 

@@ -1,0 +1,430 @@
+#include <TROOT.h>
+#include <TGraph.h>
+#include <TGraphErrors.h>
+#include <iostream>
+#include <fstream>
+#include <TMath.h>
+#include <TH1.h>
+#include <TH1D.h>
+#include <TH2.h>
+#include <TF1.h>
+#include <TF2.h>
+#include <TFile.h>
+#include <TTree.h>
+#include <TChain.h>
+#include <TCanvas.h>
+#include <TLegend.h>
+#include <TSystem.h>
+#include <TLatex.h>
+
+#include "plot2D.C"
+
+const Int_t nTdc = 180;
+const Int_t nRef = 2;
+const Int_t nBarsTDC = 90;
+const Int_t nBarsADC = 32;
+const Double_t ADCCUT = 150.;//100.0;
+
+// const TString REPLAYED_DIR = "/adaqfs/home/a-onl/sbs/Rootfiles";
+// const TString ANALYSED_DIR = "/adaqfs/home/a-onl/sbs/Rootfiles/bbhodo_hist";
+
+// // for local analysis at uog (please leave in comments)
+//TString REPLAYED_DIR = "/w/work0/home/rachel/HallA/BB_Hodo/FallRun2021/Replayed";
+TString REPLAYED_DIR = "/w/work2/jlab/halla/sbs_hodo/Rootfiles";
+TString ANALYSED_DIR = "/w/work0/home/rachel/HallA/BB_Hodo/FallRun2021/Analysed";
+
+namespace Thodo {
+  // good hits
+  Int_t NdataTdcBar;
+  Double_t TDCBar[nBarsTDC];
+  Int_t NdataTotL;
+  Double_t TDCTotL[nBarsTDC];
+  Int_t NdataTotR;
+  Double_t TDCTotR[nBarsTDC];
+  Int_t NdataLeL;
+  Double_t TDCLeL[nBarsTDC];
+  Int_t NdataLeR;
+  Double_t TDCLeR[nBarsTDC];
+  Int_t NdataTeL;
+  Double_t TDCTeL[nBarsTDC];
+  Int_t NdataTeR;
+  Double_t TDCTeR[nBarsTDC];
+  Int_t NdataMult;
+  Double_t TDCmult[nTdc];
+  Int_t NdataTDCEl;
+  Double_t TDCEl[nTdc];
+  Int_t NdataBarMeanTime;
+  Double_t BarMeanTime[nBarsTDC];
+  Int_t NdataBarTimeDiff;
+  Double_t BarTimeDiff[nBarsTDC];
+  Int_t NdataBarHitPos;
+  Double_t BarHitPos[nBarsTDC];
+
+  // ref hits
+  Int_t NdataGoodRefHitID;
+  Double_t GoodRefID[nRef];
+  Int_t NdataGoodRefHitLE;
+  Double_t GoodRefLE[nTdc*2];
+  Int_t NdataGoodRefHitTE;
+  Double_t GoodRefTE[nTdc*2];
+  Int_t NdataGoodRefMult;
+  Double_t GoodRefMult[nTdc*2];
+};
+
+TChain *T = 0;
+
+using namespace std;
+
+void PlotGoodTDC2D(const TString InFile="bbhodo_311_1000000", Int_t nevents=-1){
+  // InFile is the input file without absolute path and without .root suffix
+  // nevents is how many events to analyse, -1 for all
+  
+  // To execute
+  // root -l
+  // .L PlotGoodTDC2D.C+
+  // PlotGoodTDC2D("filename", -1)
+
+
+    TString sInFile = REPLAYED_DIR + "/" + InFile + ".root";
+  //========================================================= Get data from tree
+  if(!T) { 
+    // TString sInFile = REPLAYED_DIR + "/" + InFile + ".root";
+    cout << "Adding " << sInFile << endl;
+    T = new TChain("T");
+    T->Add(sInFile);
+    
+    // disable all branches
+    T->SetBranchStatus("*",0);
+    // enable branches
+    T->SetBranchStatus("bb.hodotdc.*",1);
+    T->SetBranchAddress("bb.hodotdc.tdcbarid",Thodo::TDCBar);
+    T->SetBranchAddress("bb.hodotdc.L.tot",Thodo::TDCTotL);
+    T->SetBranchAddress("bb.hodotdc.R.tot",Thodo::TDCTotR);
+    T->SetBranchAddress("bb.hodotdc.L.le",Thodo::TDCLeL);
+    T->SetBranchAddress("bb.hodotdc.R.le",Thodo::TDCLeR);
+    T->SetBranchAddress("bb.hodotdc.L.te",Thodo::TDCTeL);
+    T->SetBranchAddress("bb.hodotdc.R.te",Thodo::TDCTeR);
+    T->SetBranchAddress("bb.hodotdc.tdc_mult",Thodo::TDCmult);
+    T->SetBranchAddress("bb.hodotdc.tdcelemID",Thodo::TDCEl);
+    T->SetBranchAddress("bb.hodotdc.barmeantime",Thodo::BarMeanTime);
+    T->SetBranchAddress("bb.hodotdc.bartimediff",Thodo::BarTimeDiff);
+    T->SetBranchAddress("bb.hodotdc.bartimehitpos",Thodo::BarHitPos);
+    T->SetBranchAddress("bb.hodotdc.Ref.tdcelemID",Thodo::GoodRefID);
+    T->SetBranchAddress("bb.hodotdc.Ref.tdc",Thodo::GoodRefLE);
+    T->SetBranchAddress("bb.hodotdc.Ref.tdc_te",Thodo::GoodRefTE);
+    T->SetBranchAddress("bb.hodotdc.Ref.tdc_mult",Thodo::GoodRefMult);
+
+    // enable vector size branches
+    T->SetBranchAddress("Ndata.bb.hodotdc.tdcbarid",&Thodo::NdataTdcBar);
+    T->SetBranchAddress("Ndata.bb.hodotdc.L.tot",&Thodo::NdataTotL);
+    T->SetBranchAddress("Ndata.bb.hodotdc.R.tot",&Thodo::NdataTotR);   
+    T->SetBranchAddress("Ndata.bb.hodotdc.L.le",&Thodo::NdataLeL);
+    T->SetBranchAddress("Ndata.bb.hodotdc.R.le",&Thodo::NdataLeR);    
+    T->SetBranchAddress("Ndata.bb.hodotdc.L.te",&Thodo::NdataTeL);
+    T->SetBranchAddress("Ndata.bb.hodotdc.R.te",&Thodo::NdataTeR); 
+    T->SetBranchAddress("Ndata.bb.hodotdc.tdc_mult",&Thodo::NdataMult);
+    T->SetBranchAddress("Ndata.bb.hodotdc.tdcelemID",&Thodo::NdataTDCEl);
+    T->SetBranchAddress("Ndata.bb.hodotdc.barmeantime",&Thodo::NdataBarMeanTime); 
+    T->SetBranchAddress("Ndata.bb.hodotdc.bartimehitpos",&Thodo::NdataBarHitPos);
+    T->SetBranchAddress("Ndata.bb.hodotdc.Ref.tdcelemID",&Thodo::NdataGoodRefHitID); 
+    T->SetBranchAddress("Ndata.bb.hodotdc.Ref.tdc",&Thodo::NdataGoodRefHitLE); 
+    T->SetBranchAddress("Ndata.bb.hodotdc.Ref.tdc_te",&Thodo::NdataGoodRefHitTE); 
+    T->SetBranchAddress("Ndata.bb.hodotdc.Ref.tdc_mult",&Thodo::NdataGoodRefMult); 
+
+  }//setting tree
+  
+  
+  //========================================================= Check no of events
+  Int_t Nev = T->GetEntries();
+  cout << "N entries in tree is " << Nev << endl;
+  Int_t NEventsAnalysis;
+  if(nevents==-1) NEventsAnalysis = Nev;
+  else NEventsAnalysis = nevents;
+  cout << "Running analysis for " << NEventsAnalysis << " events" << endl;
+  
+
+  
+  //==================================================== Create output root file
+  // root file for viewing fits
+  TString outrootfile = ANALYSED_DIR + "/GoodTDC_" + InFile + ".root";
+  TFile *f = new TFile(outrootfile, "RECREATE");
+
+
+
+  //===================================================== Histogram Declarations
+  // number of histo bins
+  Int_t NTDCBins = 100;
+  Double_t TDCBinLow = -100.;
+  Double_t TDCBinHigh = 700.;
+  Int_t NTotBins = 50;
+  Double_t TotBinLow = 0.;
+  Double_t TotBinHigh = 200.;
+
+  TH1F *hGoodLeL[nBarsTDC];
+  TH1F *hGoodLeR[nBarsTDC];
+  TH1F *hGoodTeL[nBarsTDC];
+  TH1F *hGoodTeR[nBarsTDC];
+  TH1F *hGoodTotL[nBarsTDC];
+  TH1F *hGoodTotR[nBarsTDC];
+  TH1F *hGoodBarMeanTime[nBarsTDC];
+  TH1F *hGoodBarTimeDiff[nBarsTDC];
+  TH1F *hGoodBarHitPos[nBarsTDC];
+  TH1F *hHitBar = new TH1F("hHitBar","hHitBar",88,0,88);
+  for(Int_t bar=0; bar<(nBarsTDC); bar++){
+    // good hits
+    // leading edge
+    hGoodLeL[bar] = new TH1F(TString::Format("hGoodLe_Bar%d_L",bar),
+			     TString::Format("hGoodLe_Bar%d_L",bar),
+			     NTDCBins, TDCBinLow, TDCBinHigh);
+    hGoodLeR[bar] = new TH1F(TString::Format("hGoodLe_Bar%d_R",bar),
+			     TString::Format("hGoodLe_Bar%d_R",bar),
+			     NTDCBins, TDCBinLow, TDCBinHigh);
+    // trailing edge 
+    hGoodTeL[bar] = new TH1F(TString::Format("hGoodTe_Bar%d_L",bar),
+			     TString::Format("hGoodTe_Bar%d_L",bar),
+			     NTDCBins, TDCBinLow, TDCBinHigh);
+    hGoodTeR[bar] = new TH1F(TString::Format("hGoodTe_Bar%d_R",bar),
+			     TString::Format("hGoodTe_Bar%d_R",bar),
+			     NTDCBins, TDCBinLow, TDCBinHigh);
+    // tot 
+    hGoodTotL[bar] = new TH1F(TString::Format("hGoodTot_Bar%d_L",bar),
+			      TString::Format("hGoodTot_Bar%d_L",bar),
+			      NTotBins, TotBinLow, TotBinHigh);
+    hGoodTotR[bar] = new TH1F(TString::Format("hGoodTot_Bar%d_R",bar),
+			      TString::Format("hGoodTot_Bar%d_R",bar),
+			      NTotBins, TotBinLow, TotBinHigh);
+    // bar mean time
+    hGoodBarMeanTime[bar] =  new TH1F(TString::Format("hGoodMeantime_Bar%d",bar),
+				      TString::Format("hGoodMeantime_Bar%d",bar),
+				      100, 0.0, 1000.);
+    // bar time diff
+    hGoodBarTimeDiff[bar] =  new TH1F(TString::Format("hGoodTimeDiff_Bar%d",bar),
+				      TString::Format("hGoodTimeDiff_Bar%d",bar),
+				      50, 0.0, 500.0);
+    // bar hit pos
+    hGoodBarHitPos[bar] =  new TH1F(TString::Format("hGoodHitPos_Bar%d",bar),
+				      TString::Format("hGoodHitPos_Bar%d",bar),
+				      50, -1.0, 1.0);
+  }// bar loop
+  TH1F *hMultiplicityL[nBarsTDC];
+  TH1F *hMultiplicityR[nBarsTDC];
+  TH1F *hMultiplicity = new TH1F("hMultiplicity","hMultiplicity",20,0,20);
+  for(Int_t tdc=0; tdc<nBarsTDC; tdc++){
+      hMultiplicityL[tdc] =  new TH1F(TString::Format("hMultiplicity_Bar%d_L",tdc),
+				      TString::Format("hMultiplicity_Bar%d_L",tdc),
+				      10, 0, 10);
+      hMultiplicityR[tdc] =  new TH1F(TString::Format("hMultiplicity_Bar%d_R",tdc),
+					 TString::Format("hMultiplicity_Bar%d_R",tdc),
+					 10, 0, 10);
+  }// 180 element loop
+  // hit channel id
+  TH1F *hHitPMTL = new TH1F("hHitPMTL","hHitPMTL",88,0,88);
+  TH1F *hHitPMTR = new TH1F("hHitPMTR","hHitPMTR",88,0,88);
+  // reference hits
+  TH1F *hGoodRefLE[nRef];
+  TH1F *hGoodRefTE[nRef];
+  TH1F *hRefMult[nRef];
+  TString side[nRef]={"L","R"};
+  for(Int_t ref=0; ref<nRef; ref++){
+    hGoodRefLE[ref] = new TH1F(TString::Format("hGoodRefLE_%s",side[ref].Data()),
+			       TString::Format("hGoodRefLE_%s",side[ref].Data()),
+			       400,0,1000);
+    hGoodRefTE[ref] = new TH1F(TString::Format("hGoodRefTE_%s",side[ref].Data()),
+			       TString::Format("hGoodRefTE_%s",side[ref].Data()),
+			       400,0,1000);
+    hRefMult[ref] =  new TH1F(TString::Format("hRefMult_%s",side[ref].Data()),
+			       TString::Format("hRefMult_%s",side[ref].Data()),
+			       10,0,10);
+  }
+
+  //================================================================= Event Loop
+  // variables outside event loop
+  Int_t EventCounter = 0;
+
+  // event loop start
+  for(Int_t event=0; event<NEventsAnalysis; event++){
+    
+    T->GetEntry(event);
+    // cout << "event " << event << endl;
+    EventCounter++;
+    if (EventCounter % 100000 == 0) cout <<
+				      EventCounter << "/" <<
+				      NEventsAnalysis << endl;
+      for(Int_t tdcbar=0; tdcbar<Thodo::NdataTdcBar; tdcbar++){
+      	Int_t bar = (Int_t)Thodo::TDCBar[tdcbar];
+	hHitBar->Fill(bar);
+	hGoodLeL[bar]->Fill(Thodo::TDCLeL[tdcbar]);
+	hGoodTeL[bar]->Fill(Thodo::TDCTeL[tdcbar]);
+	hGoodTotL[bar]->Fill(Thodo::TDCTotL[tdcbar]);
+	hGoodLeR[bar]->Fill(Thodo::TDCLeR[tdcbar]);
+	hGoodTeR[bar]->Fill(Thodo::TDCTeL[tdcbar]);
+	hGoodTotR[bar]->Fill(Thodo::TDCTotR[tdcbar]);
+	hGoodBarHitPos[bar]->Fill(Thodo::BarHitPos[tdcbar]);
+	hGoodBarMeanTime[bar]->Fill(Thodo::BarMeanTime[tdcbar]);
+	hGoodBarTimeDiff[bar]->Fill(Thodo::BarTimeDiff[tdcbar]);
+      }// good tdc hit loop
+      for(Int_t tdc=0; tdc<Thodo::NdataMult; tdc++){
+      	hMultiplicity->Fill(Thodo::TDCmult[tdc]);
+      	if((Int_t)Thodo::TDCEl[tdc]<90)//left
+      	  hMultiplicityL[(Int_t)Thodo::TDCEl[tdc]]->Fill(Thodo::TDCmult[tdc]);
+      	else
+      	  hMultiplicityR[(Int_t)Thodo::TDCEl[tdc]-90]->Fill(Thodo::TDCmult[tdc]);
+      }// element loop
+      //ref
+      for(Int_t r=0; r<(Int_t)Thodo::NdataGoodRefHitLE; r++){
+      	Int_t side2 = (Int_t)Thodo::GoodRefID[r];
+      	if(side2==0 || side2==1){
+      	  hGoodRefLE[side2]->Fill(Thodo::GoodRefLE[r]);
+      	  hGoodRefTE[side2]->Fill(Thodo::GoodRefTE[r]);
+      	}
+      }// good ref hit loop
+      for(Int_t p=0; p<(Int_t)Thodo::NdataGoodRefMult; p++){
+	hRefMult[p]->Fill(Thodo::GoodRefMult[p]);
+      }
+  }// event loop
+
+
+
+  //========================================================== Write histos
+  for(Int_t b=0; b<nBarsTDC; b++){
+    // hGoodLeL[b]->GetXaxis()->SetLabelSize(0.06);
+    hGoodLeL[b]->GetXaxis()->SetTitle("time (ns)");
+    hGoodLeL[b]->Write();
+    // hGoodLeR[b]->GetXaxis()->SetLabelSize(0.06);
+    hGoodLeR[b]->GetXaxis()->SetTitle("time (ns)");
+    hGoodLeR[b]->Write();
+    // hGoodTeL[b]->GetXaxis()->SetLabelSize(0.06);
+    hGoodTeL[b]->GetXaxis()->SetTitle("time (ns)");
+    hGoodTeL[b]->Write();
+    // hGoodTeR[b]->GetXaxis()->SetLabelSize(0.06);
+    hGoodTeR[b]->GetXaxis()->SetTitle("time (ns)");
+    hGoodTeR[b]->Write();
+    // hGoodTotL[b]->GetXaxis()->SetLabelSize(0.06);
+    hGoodTotL[b]->GetXaxis()->SetTitle("time (ns)");
+    hGoodTotL[b]->Write();
+    // hGoodTotR[b]->GetXaxis()->SetLabelSize(0.06);
+    hGoodTotR[b]->GetXaxis()->SetTitle("time (ns)");
+    hGoodTotL[b]->Write();
+    // hGoodBarMeanTime[b]->GetXaxis()->SetLabelSize(0.06);
+    hGoodBarMeanTime[b]->GetXaxis()->SetTitle("time (ns)");
+    hGoodBarMeanTime[b]->Write();
+    // hGoodBarTimeDiff[b]->GetXaxis()->SetLabelSize(0.06);
+    hGoodBarTimeDiff[b]->GetXaxis()->SetTitle("time (ns)");
+    hGoodBarTimeDiff[b]->Write();
+    // hGoodBarHitPos[b]->GetXaxis()->SetLabelSize(0.06);
+    hGoodBarTimeDiff[b]->GetXaxis()->SetTitle("hit pos (m)");
+    hGoodBarHitPos[b]->Write();
+    // hMultiplicityL[b]->GetXaxis()->SetLabelSize(0.06);
+    hMultiplicityL[b]->GetXaxis()->SetTitle("tdc hit multiplicity");
+    hMultiplicityL[b]->Write();
+    // hMultiplicityR[b]->GetXaxis()->SetLabelSize(0.06);
+    hMultiplicityR[b]->GetXaxis()->SetTitle("tdc hit multiplicity");
+    hMultiplicityR[b]->Write();
+  }
+  // hHitBar->GetXaxis()->SetLabelSize(0.06);
+  hHitBar->GetXaxis()->SetTitle("bar");
+  hHitBar->Write();
+  // hMultiplicity->GetXaxis()->SetLabelSize(0.06);
+  hMultiplicity->GetXaxis()->SetTitle("tdc hit multiplicity");
+  hMultiplicity->Write();
+  // hHitPMTL->GetXaxis()->SetLabelSize(0.06);
+  hHitPMTL->GetXaxis()->SetTitle("Bar ID of Left PMT Hit");
+  hHitPMTL->SetTitle("");
+  hHitPMTL->Write();
+  // hHitPMTR->GetXaxis()->SetLabelSize(0.06);
+  hHitPMTR->GetXaxis()->SetTitle("Bar ID of Right PMT Hit");
+  hHitPMTR->SetTitle("");
+  hHitPMTR->Write();
+  // ref histos
+  for(Int_t rr=0; rr<nRef; rr++){
+    hGoodRefLE[rr]->GetXaxis()->SetTitle("time (ns)");
+    // hGoodRefLE[rr]->GetXaxis()->SetLabelSize(0.06);
+    if(rr==0)
+      hGoodRefLE[rr]->GetXaxis()->SetTitle("Left TDC Ref TE Time (ns)");
+    else 
+      hGoodRefLE[rr]->GetXaxis()->SetTitle("Right TDC Ref TE Time (ns)");
+    hGoodRefLE[rr]->SetTitle("");
+    hGoodRefLE[rr]->Write();
+    // hGoodRefTE[rr]->GetXaxis()->SetTitle("time (ns)");
+    // hGoodRefTE[rr]->GetXaxis()->SetLabelSize(0.06);
+    if(rr==0)
+      hGoodRefTE[rr]->GetXaxis()->SetTitle("Left TDC Ref TE Time (ns)");
+    else 
+      hGoodRefTE[rr]->GetXaxis()->SetTitle("Right TDC Ref TE Time (ns)");
+    hGoodRefTE[rr]->SetTitle("");
+    hGoodRefTE[rr]->Write();
+    if(rr==0)
+      hRefMult[rr]->GetXaxis()->SetTitle("Left TDC Ref Multiplicity");
+    else
+      hRefMult[rr]->GetXaxis()->SetTitle("Right TDC Ref Multiplicity");
+    // hRefMult[rr]->GetXaxis()->SetLabelSize(0.06);
+    hRefMult[rr]->SetTitle("");
+    hRefMult[rr]->Write();
+  }
+
+
+  // TString soptions = ;
+  // gROOT->ProcessLine(.x plot2D.C);
+  //========================================================== Plot 2D graphs
+  // process the plot2D macro to add in the 2D graphs
+  plot2D(sInFile,nevents);
+  TH2F *hptL;
+  gDirectory->GetObject("hptL",hptL);
+  TH2F *hptR;
+  gDirectory->GetObject("hptR",hptR);
+  TH2F *hptotL;
+  gDirectory->GetObject("hptotL",hptotL);
+  TH2F *hptotR;
+  gDirectory->GetObject("hptotR",hptotR);
+  TH2F *hpmultL;
+  gDirectory->GetObject("hpmultL",hpmultL);
+  TH2F *hpmultR;
+  gDirectory->GetObject("hpmultR",hpmultR);
+  TH2F *hbtL;
+  gDirectory->GetObject("hbtL",hbtL);
+
+
+  TH1F* hbt1cop = new TH1F("hbt1cop","", 95,0,94);
+  // // TH1F* hbt2 = new TH1F("hbt2","", 95,0,94);
+  TH1F* hbt3cop = new TH1F("hbt3cop","", 95,0,94);
+  hbt1cop = (TH1F*)hpmultR->ProjectionY();
+  hbt1cop->SetLineWidth(2);
+  hbt1cop->SetLineColor(4);
+  // // hbt1->Draw("");
+  hbt1cop->GetXaxis()->SetTitle("Paddle / PMT Number");
+  hbt1cop->Sumw2();
+  TH1F *hbt2;
+  gDirectory->GetObject("hbt2",hbt2);
+  hbt3cop = (TH1F*)hpmultL->ProjectionY();
+  hbt3cop->SetLineColor(2);
+  hbt3cop->SetLineWidth(2);
+  // hbt3->Draw("same");
+  hbt3cop->Sumw2();
+
+
+  // TH1F *hbt1;
+  // gDirectory->GetObject("hbt1",hbt1);
+  // TH1F *hbt2;
+  // gDirectory->GetObject("hbt2",hbt2);
+  // TH1F *hbt3;
+  // gDirectory->GetObject("hbt3",hbt3);
+
+  f->cd();
+  hptL->Write();
+  hptR->Write();
+  hptotL->Write();
+  hptotR->Write();
+  hpmultL->Write();
+  hpmultR->Write();
+  hbtL->Write();
+  hbt1cop->Write();
+  hbt2->Write();
+  hbt3cop->Write();
+
+  //========================================================== Close output file
+  f->Close();
+
+
+
+  //================================================================== End Macro
+}// end main
