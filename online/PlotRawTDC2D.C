@@ -17,8 +17,6 @@
 #include <TSystem.h>
 #include <TLatex.h>
 
-#include "plot2D.C"
-
 const Int_t nTdc = 180;
 const Int_t nRef = 2;
 const Int_t nBarsTDC = 90;
@@ -31,8 +29,8 @@ const Double_t ADCCUT = 150.;//100.0;
 // // for local analysis at uog (please leave in comments)
 // TString REPLAYED_DIR = "/w/work0/home/rachel/HallA/BB_Hodo/FallRun2021/Replayed";
 TString REPLAYED_DIR = "/w/work2/jlab/halla/sbs_hodo/Rootfiles";
-TString ANALYSED_DIR = "/w/work0/home/rachel/HallA/BB_Hodo/FallRun2021/Analysed";
-
+TString ANALYSED_DIR = "/w/work2/jlab/halla/sbs_hodo/Rootfiles/bbhodo_hist";
+//TString ANALYSED_DIR = "/w/work0/home/rachel/HallA/BB_Hodo/FallRun2021/Analysed";
 
 namespace Thodo {
   Int_t NdataMult;
@@ -55,6 +53,17 @@ namespace Thodo {
   Double_t RawRefTE[nTdc*2];
   Int_t NdataRefMult;
   Double_t RefMult[nTdc*2];
+
+  // bar hits
+  Int_t NdataTdcBar;
+  Double_t TDCBar[nBarsTDC];
+  Int_t NdataBarMeanTime;
+  Double_t BarMeanTime[nBarsTDC];
+  Int_t NdataBarTimeDiff;
+  Double_t BarTimeDiff[nBarsTDC];
+  Int_t NdataBarHitPos;
+  Double_t BarHitPos[nBarsTDC];
+
 };
 
 TChain *T = 0;
@@ -92,6 +101,11 @@ void PlotRawTDC2D(const TString InFile="bbhodo_311_1000000", Int_t nevents=-1){
     T->SetBranchAddress("bb.hodotdc.Ref.hits.t",Thodo::RawRefLE);
     T->SetBranchAddress("bb.hodotdc.Ref.hits.t_te",Thodo::RawRefTE);
     T->SetBranchAddress("bb.hodotdc.Ref.tdc_mult",Thodo::RefMult);
+    T->SetBranchAddress("bb.hodotdc.tdcbarid",Thodo::TDCBar);
+    T->SetBranchAddress("bb.hodotdc.barmeantime",Thodo::BarMeanTime);
+    T->SetBranchAddress("bb.hodotdc.bartimediff",Thodo::BarTimeDiff);
+    T->SetBranchAddress("bb.hodotdc.bartimehitpos",Thodo::BarHitPos);
+
 
     // enable vector size branches
     T->SetBranchAddress("Ndata.bb.hodotdc.tdc_mult",&Thodo::NdataMult); 
@@ -103,6 +117,10 @@ void PlotRawTDC2D(const TString InFile="bbhodo_311_1000000", Int_t nevents=-1){
     T->SetBranchAddress("Ndata.bb.hodotdc.Ref.hits.t",&Thodo::NdataRawRefHitLE); 
     T->SetBranchAddress("Ndata.bb.hodotdc.Ref.hits.t_te",&Thodo::NdataRawRefHitTE); 
     T->SetBranchAddress("Ndata.bb.hodotdc.Ref.tdc_mult",&Thodo::NdataRefMult); 
+    T->SetBranchAddress("Ndata.bb.hodotdc.tdcbarid",&Thodo::NdataTdcBar);
+    T->SetBranchAddress("Ndata.bb.hodotdc.barmeantime",&Thodo::NdataBarMeanTime); 
+    T->SetBranchAddress("Ndata.bb.hodotdc.bartimediff",&Thodo::NdataBarTimeDiff); 
+    T->SetBranchAddress("Ndata.bb.hodotdc.bartimehitpos",&Thodo::NdataBarHitPos);
 
   }//setting tree
   
@@ -127,11 +145,11 @@ void PlotRawTDC2D(const TString InFile="bbhodo_311_1000000", Int_t nevents=-1){
   //===================================================== Histogram Declarations
   // number of histo bins
   Int_t NTDCBins = 100;
-  Double_t TDCBinLow = -100;//-400.;
-  Double_t TDCBinHigh = 700;//400.;
+  Double_t TDCBinLow = -600;//-400.;
+  Double_t TDCBinHigh = -450;//400.;
   Int_t NTotBins = 50;
   Double_t TotBinLow = 0.;
-  Double_t TotBinHigh = 200.;
+  Double_t TotBinHigh = 50.;
 
   // Raw hits ie all hits
   TH1F *hRawLeL[nBarsTDC];
@@ -186,14 +204,26 @@ void PlotRawTDC2D(const TString InFile="bbhodo_311_1000000", Int_t nevents=-1){
   for(Int_t ref=0; ref<nRef; ref++){
     hRawRefLE[ref] = new TH1F(TString::Format("hRawRefLE_%s",side[ref].Data()),
 			      TString::Format("hRawRefLE_%s",side[ref].Data()),
-			      400,0,1000);
+			      400,1000,2000);
     hRawRefTE[ref] = new TH1F(TString::Format("hRawRefTE_%s",side[ref].Data()),
 			      TString::Format("hRawRefTE_%s",side[ref].Data()),
-			      400,0,1000);
+			      400,1000,2000);
     hRefMult[ref] =  new TH1F(TString::Format("hRefMult_%s",side[ref].Data()),
 			       TString::Format("hRefMult_%s",side[ref].Data()),
 			       10,0,10);
   }
+  // 2D histograms
+  TH2F* h2d_RawLEL  = new TH2F("h2d_RawLEL","", NTDCBins,TDCBinLow,TDCBinHigh,nBarsTDC+1,0,nBarsTDC+1);
+  TH2F* h2d_RawLER  = new TH2F("h2d_RawLER","", NTDCBins,TDCBinLow,TDCBinHigh,nBarsTDC+1,0,nBarsTDC+1);
+
+  TH2F* h2d_RawTotL = new TH2F("h2d_RawTotL","", NTotBins,TotBinLow,TotBinHigh,nBarsTDC+1,0,nBarsTDC+1);
+  TH2F* h2d_RawTotR = new TH2F("h2d_RawTotR","", NTotBins,TotBinLow,TotBinHigh,nBarsTDC+1,0,nBarsTDC+1);
+
+  TH2F* h2d_MultL   = new TH2F("h2d_MultL","", 5,0,5,nBarsTDC+1,0,nBarsTDC+1);
+  TH2F* h2d_MultR   = new TH2F("h2d_MultR","", 5,0,5,nBarsTDC+1,0,nBarsTDC+1);
+
+  TH2F* h2d_BarMT   = new TH2F("h2d_BarMT","", NTDCBins,TDCBinLow,TDCBinHigh,nBarsTDC+1,0,nBarsTDC+1);
+  TH2F* h2d_BarTD   = new TH2F("h2d_BarTD","", 100,-30,30,nBarsTDC+1,0,nBarsTDC+1);
 
   //================================================================= Event Loop
   // variables outside event loop
@@ -208,43 +238,55 @@ void PlotRawTDC2D(const TString InFile="bbhodo_311_1000000", Int_t nevents=-1){
     if (EventCounter % 100000 == 0) cout <<
 				      EventCounter << "/" <<
 				      NEventsAnalysis << endl;
-      for(Int_t el=0; el<Thodo::NdataRawElID; el++){
-      	if(Thodo::RawElID[el]<90){//left
-      	  hRawLeL[(Int_t)Thodo::RawElID[el]]->Fill(Thodo::RawElLE[el]);
-      	  hRawTeL[(Int_t)Thodo::RawElID[el]]->Fill(Thodo::RawElTE[el]);
-      	  hRawTotL[(Int_t)Thodo::RawElID[el]]->Fill(Thodo::RawElTot[el]);
-	  hHitPMTL->Fill((Int_t)Thodo::RawElID[el]);
-      	}
-      	else{//right
-      	  hRawLeR[(Int_t)Thodo::RawElID[el]-90]->Fill(Thodo::RawElLE[el]);
-      	  hRawTeR[(Int_t)Thodo::RawElID[el]-90]->Fill(Thodo::RawElTE[el]);
-      	  hRawTotR[(Int_t)Thodo::RawElID[el]-90]->Fill(Thodo::RawElTot[el]);
-	  hHitPMTR->Fill((Int_t)Thodo::RawElID[el]-90);
-      	}
-      }// all raw tdc hit loop
-      for(Int_t tdc=0; tdc<Thodo::NdataMult; tdc++){
-      	hMultiplicity->Fill(Thodo::TDCmult[tdc]);
-      	if((Int_t)Thodo::RawElID[tdc]<90)//left
-      	  hMultiplicityL[(Int_t)Thodo::RawElID[tdc]]->Fill(Thodo::TDCmult[tdc]);
-      	else
-      	  hMultiplicityR[(Int_t)Thodo::RawElID[tdc]-90]->Fill(Thodo::TDCmult[tdc]);
-      }// element loop
-      //ref
-      for(Int_t ref=0; ref<(Int_t)Thodo::NdataRawRefHitLE; ref++){
-      	Int_t side = (Int_t)Thodo::RawRefID[ref];
-      	if(side==0 || side==1){
-      	  hRawRefLE[side]->Fill(Thodo::RawRefLE[ref]);
-      	  hRawRefTE[side]->Fill(Thodo::RawRefTE[ref]);
-      	}
-      }// ref raw hit loop
-      for(Int_t p=0; p<(Int_t)Thodo::NdataRefMult; p++){
-	hRefMult[p]->Fill(Thodo::RefMult[p]);
+    for(Int_t el=0; el<Thodo::NdataRawElID; el++){
+      if(Thodo::RawElID[el]<90){//left
+	hRawLeL[(Int_t)Thodo::RawElID[el]]->Fill(Thodo::RawElLE[el]);
+	hRawTeL[(Int_t)Thodo::RawElID[el]]->Fill(Thodo::RawElTE[el]);
+	hRawTotL[(Int_t)Thodo::RawElID[el]]->Fill(Thodo::RawElTot[el]);
+	hHitPMTL->Fill((Int_t)Thodo::RawElID[el]);
+	h2d_RawLEL->Fill(Thodo::RawElLE[el], (Int_t)Thodo::RawElID[el]);
+	h2d_RawTotL->Fill(Thodo::RawElTot[el], (Int_t)Thodo::RawElID[el]);
       }
+      else{//right
+	hRawLeR[(Int_t)Thodo::RawElID[el]-90]->Fill(Thodo::RawElLE[el]);
+	hRawTeR[(Int_t)Thodo::RawElID[el]-90]->Fill(Thodo::RawElTE[el]);
+	hRawTotR[(Int_t)Thodo::RawElID[el]-90]->Fill(Thodo::RawElTot[el]);
+	hHitPMTR->Fill((Int_t)Thodo::RawElID[el]-90);
+	h2d_RawLER->Fill(Thodo::RawElLE[el], (Int_t)Thodo::RawElID[el]-90);
+	h2d_RawTotR->Fill(Thodo::RawElTot[el], (Int_t)Thodo::RawElID[el]-90);
+      }
+    }// all raw tdc hit loop
+    for(Int_t tdc=0; tdc<Thodo::NdataMult; tdc++){
+      hMultiplicity->Fill(Thodo::TDCmult[tdc]);
+      if((Int_t)Thodo::RawElID[tdc]<90) { //left {
+	hMultiplicityL[(Int_t)Thodo::RawElID[tdc]]->Fill(Thodo::TDCmult[tdc]);
+	h2d_MultL->Fill(Thodo::TDCmult[tdc], (Int_t)Thodo::RawElID[tdc] );
+      }
+      else {
+	hMultiplicityR[(Int_t)Thodo::RawElID[tdc]-90]->Fill(Thodo::TDCmult[tdc]);
+	h2d_MultR->Fill(Thodo::TDCmult[tdc], (Int_t)Thodo::RawElID[tdc]-90);
+      }
+    }// element loop
+    //ref
+    for(Int_t ref=0; ref<(Int_t)Thodo::NdataRawRefHitLE; ref++){
+      Int_t side = (Int_t)Thodo::RawRefID[ref];
+      if(side==0 || side==1){
+	hRawRefLE[side]->Fill(Thodo::RawRefLE[ref]);
+	hRawRefTE[side]->Fill(Thodo::RawRefTE[ref]);
+      }
+    }// ref raw hit loop
+    for(Int_t p=0; p<(Int_t)Thodo::NdataRefMult; p++){
+      hRefMult[p]->Fill(Thodo::RefMult[p]);
+    } // bar loop
+    for(Int_t tdcbar=0; tdcbar<Thodo::NdataTdcBar; tdcbar++){
+      Int_t bar = (Int_t)Thodo::TDCBar[tdcbar];
+      h2d_BarMT->Fill(Thodo::BarMeanTime[tdcbar], bar);
+      h2d_BarTD->Fill(Thodo::BarTimeDiff[tdcbar], bar);
+    }
   }// event loop
-
-
-
-  //========================================================== Write histos
+  
+    
+    //========================================================== Write histos
   for(Int_t b=0; b<nBarsTDC; b++){
     // hRawLeL[b]->GetXaxis()->SetLabelSize(0.06);
     hRawLeL[b]->GetXaxis()->SetTitle("time (ns)");
@@ -313,64 +355,53 @@ void PlotRawTDC2D(const TString InFile="bbhodo_311_1000000", Int_t nevents=-1){
     hRefMult[rr]->Write();
   }
 
-  // TString soptions = ;
-  // gROOT->ProcessLine(.x plot2D.C);
-  //========================================================== Plot 2D graphs
-  // process the plot2D macro to add in the 2D graphs
-  plot2D(sInFile,nevents);
-  TH2F *hptL;
-  gDirectory->GetObject("hptL",hptL);
-  TH2F *hptR;
-  gDirectory->GetObject("hptR",hptR);
-  TH2F *hptotL;
-  gDirectory->GetObject("hptotL",hptotL);
-  TH2F *hptotR;
-  gDirectory->GetObject("hptotR",hptotR);
-  TH2F *hpmultL;
-  gDirectory->GetObject("hpmultL",hpmultL);
-  TH2F *hpmultR;
-  gDirectory->GetObject("hpmultR",hpmultR);
-  TH2F *hbtL;
-  gDirectory->GetObject("hbtL",hbtL);
+  // 2D histograms
+  h2d_RawLEL->GetXaxis()->SetTitle("TDC Leading Edge Time [ns]");
+  h2d_RawLEL->GetYaxis()->SetTitle("PMT number (Left)");
+  h2d_RawLEL->SetTitle("");
+  h2d_RawLEL->Write();
 
+  h2d_RawLER->GetXaxis()->SetTitle("TDC Leading Edge Time [ns]");
+  h2d_RawLER->GetYaxis()->SetTitle("PMT number (Right)");
+  h2d_RawLER->SetTitle("");
+  h2d_RawLER->Write();
 
-  TH1F* hbt1cop = new TH1F("hbt1cop","", 95,0,94);
-  // // TH1F* hbt2 = new TH1F("hbt2","", 95,0,94);
-  TH1F* hbt3cop = new TH1F("hbt3cop","", 95,0,94);
-  hbt1cop = (TH1F*)hpmultR->ProjectionY();
-  hbt1cop->SetLineWidth(2);
-  hbt1cop->SetLineColor(4);
-  // // hbt1->Draw("");
-  hbt1cop->GetXaxis()->SetTitle("Paddle / PMT Number");
-  hbt1cop->Sumw2();
-  TH1F *hbt2;
-  gDirectory->GetObject("hbt2",hbt2);
-  hbt3cop = (TH1F*)hpmultL->ProjectionY();
-  hbt3cop->SetLineColor(2);
-  hbt3cop->SetLineWidth(2);
-  // hbt3->Draw("same");
-  hbt3cop->Sumw2();
+  h2d_RawTotL->GetXaxis()->SetTitle("TDC Time-over-threshold [ns]");
+  h2d_RawTotL->GetYaxis()->SetTitle("PMT number (Left)");
+  h2d_RawTotL->SetTitle("");
+  h2d_RawTotL->Write();
 
+  h2d_RawTotR->GetXaxis()->SetTitle("TDC Time-over-threshold [ns]");
+  h2d_RawTotR->GetYaxis()->SetTitle("PMT number (Right)");
+  h2d_RawTotR->SetTitle("");
+  h2d_RawTotR->Write();
 
-  // TH1F *hbt1;
-  // gDirectory->GetObject("hbt1",hbt1);
-  // TH1F *hbt2;
-  // gDirectory->GetObject("hbt2",hbt2);
-  // TH1F *hbt3;
-  // gDirectory->GetObject("hbt3",hbt3);
+  h2d_MultL->GetXaxis()->SetTitle("TDC Multiplicity [ns]");
+  h2d_MultL->GetYaxis()->SetTitle("PMT number (Left)");
+  h2d_MultL->SetTitle("");
+  h2d_MultL->Write();
 
-  f->cd();
-  hptL->Write();
-  hptR->Write();
-  hptotL->Write();
-  hptotR->Write();
-  hpmultL->Write();
-  hpmultR->Write();
-  hbtL->Write();
-  hbt1cop->Write();
-  hbt2->Write();
-  hbt3cop->Write();
+  h2d_MultR->GetXaxis()->SetTitle("TDC Multiplicity");
+  h2d_MultR->GetYaxis()->SetTitle("PMT number (Right)");
+  h2d_MultR->SetTitle("");
+  h2d_MultR->Write();
 
+  h2d_BarMT->GetXaxis()->SetTitle("L/R Mean Time [ns]");
+  h2d_BarMT->GetYaxis()->SetTitle("Hodoscope Bar Number");
+  h2d_BarMT->SetTitle("");
+  h2d_BarMT->Write();
+
+  h2d_BarTD->GetXaxis()->SetTitle("L/R Time Difference [ns]");
+  h2d_BarTD->GetYaxis()->SetTitle("Hodoscope Bar Number");
+  h2d_BarTD->SetTitle("");
+  h2d_BarTD->Write();
+
+  TH1F* h1d_BarMT = new TH1F("h1d_BarMT","", nBarsTDC+1,0,nBarsTDC+1); 
+  h1d_BarMT = (TH1F*)h2d_BarMT->ProjectionY();
+  h1d_BarMT->SetName("h1d_BarMT");
+  h1d_BarMT->GetXaxis()->SetTitle("Hodoscope Bar Number");
+  h1d_BarMT->Sumw2();
+  h1d_BarMT->Write();
 
 
   //========================================================== Close output file
