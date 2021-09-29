@@ -101,10 +101,10 @@ void PlotRawTDC2D(const TString InFile="bbhodo_311_1000000", Int_t nevents=-1){
     T->SetBranchAddress("bb.hodotdc.Ref.hits.t",Thodo::RawRefLE);
     T->SetBranchAddress("bb.hodotdc.Ref.hits.t_te",Thodo::RawRefTE);
     T->SetBranchAddress("bb.hodotdc.Ref.tdc_mult",Thodo::RefMult);
-    T->SetBranchAddress("bb.hodotdc.tdcbarid",Thodo::TDCBar);
-    T->SetBranchAddress("bb.hodotdc.barmeantime",Thodo::BarMeanTime);
-    T->SetBranchAddress("bb.hodotdc.bartimediff",Thodo::BarTimeDiff);
-    T->SetBranchAddress("bb.hodotdc.bartimehitpos",Thodo::BarHitPos);
+    T->SetBranchAddress("bb.hodotdc.bar.tdc.id",Thodo::TDCBar);
+    T->SetBranchAddress("bb.hodotdc.bar.tdc.meantime",Thodo::BarMeanTime);
+    T->SetBranchAddress("bb.hodotdc.bar.tdc.timediff",Thodo::BarTimeDiff);
+    T->SetBranchAddress("bb.hodotdc.bar.tdc.timehitpos",Thodo::BarHitPos);
 
 
     // enable vector size branches
@@ -117,10 +117,10 @@ void PlotRawTDC2D(const TString InFile="bbhodo_311_1000000", Int_t nevents=-1){
     T->SetBranchAddress("Ndata.bb.hodotdc.Ref.hits.t",&Thodo::NdataRawRefHitLE); 
     T->SetBranchAddress("Ndata.bb.hodotdc.Ref.hits.t_te",&Thodo::NdataRawRefHitTE); 
     T->SetBranchAddress("Ndata.bb.hodotdc.Ref.tdc_mult",&Thodo::NdataRefMult); 
-    T->SetBranchAddress("Ndata.bb.hodotdc.tdcbarid",&Thodo::NdataTdcBar);
-    T->SetBranchAddress("Ndata.bb.hodotdc.barmeantime",&Thodo::NdataBarMeanTime); 
-    T->SetBranchAddress("Ndata.bb.hodotdc.bartimediff",&Thodo::NdataBarTimeDiff); 
-    T->SetBranchAddress("Ndata.bb.hodotdc.bartimehitpos",&Thodo::NdataBarHitPos);
+    T->SetBranchAddress("Ndata.bb.hodotdc.bar.tdc.id",&Thodo::NdataTdcBar);
+    T->SetBranchAddress("Ndata.bb.hodotdc.bar.tdc.meantime",&Thodo::NdataBarMeanTime); 
+    T->SetBranchAddress("Ndata.bb.hodotdc.bar.tdc.timediff",&Thodo::NdataBarTimeDiff); 
+    T->SetBranchAddress("Ndata.bb.hodotdc.bar.tdc.timehitpos",&Thodo::NdataBarHitPos);
 
   }//setting tree
   
@@ -145,8 +145,8 @@ void PlotRawTDC2D(const TString InFile="bbhodo_311_1000000", Int_t nevents=-1){
   //===================================================== Histogram Declarations
   // number of histo bins
   Int_t NTDCBins = 100;
-  Double_t TDCBinLow = -600;//-400.;
-  Double_t TDCBinHigh = -450;//400.;
+  Double_t TDCBinLow = -200;//-400.;
+  Double_t TDCBinHigh = 0;//400.;
   Int_t NTotBins = 50;
   Double_t TotBinLow = 0.;
   Double_t TotBinHigh = 50.;
@@ -204,10 +204,10 @@ void PlotRawTDC2D(const TString InFile="bbhodo_311_1000000", Int_t nevents=-1){
   for(Int_t ref=0; ref<nRef; ref++){
     hRawRefLE[ref] = new TH1F(TString::Format("hRawRefLE_%s",side[ref].Data()),
 			      TString::Format("hRawRefLE_%s",side[ref].Data()),
-			      400,1000,2000);
+			      400,0,3000);
     hRawRefTE[ref] = new TH1F(TString::Format("hRawRefTE_%s",side[ref].Data()),
 			      TString::Format("hRawRefTE_%s",side[ref].Data()),
-			      400,1000,2000);
+			      400,0,3000);
     hRefMult[ref] =  new TH1F(TString::Format("hRefMult_%s",side[ref].Data()),
 			       TString::Format("hRefMult_%s",side[ref].Data()),
 			       10,0,10);
@@ -260,11 +260,13 @@ void PlotRawTDC2D(const TString InFile="bbhodo_311_1000000", Int_t nevents=-1){
       hMultiplicity->Fill(Thodo::TDCmult[tdc]);
       if((Int_t)Thodo::RawElID[tdc]<90) { //left {
 	hMultiplicityL[(Int_t)Thodo::RawElID[tdc]]->Fill(Thodo::TDCmult[tdc]);
-	h2d_MultL->Fill(Thodo::TDCmult[tdc], (Int_t)Thodo::RawElID[tdc] );
+	if( Thodo::TDCmult[tdc] != 0 )
+	  h2d_MultL->Fill(Thodo::TDCmult[tdc], (Int_t)Thodo::RawElID[tdc] );
       }
       else {
 	hMultiplicityR[(Int_t)Thodo::RawElID[tdc]-90]->Fill(Thodo::TDCmult[tdc]);
-	h2d_MultR->Fill(Thodo::TDCmult[tdc], (Int_t)Thodo::RawElID[tdc]-90);
+	if( Thodo::TDCmult[tdc] != 0 )
+	  h2d_MultR->Fill(Thodo::TDCmult[tdc], (Int_t)Thodo::RawElID[tdc]-90);
       }
     }// element loop
     //ref
