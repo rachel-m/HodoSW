@@ -21,7 +21,9 @@ const Int_t nTdc = 180;
 const Int_t nRef = 2;
 const Int_t nBarsTDC = 90;
 const Int_t nBarsADC = 32;
+const Int_t nADC = 64;
 const Double_t ADCCUT = 150.;//100.0;
+const Int_t adcbarstart = 32;//64;//32;//0;
 
 // const TString REPLAYED_DIR = "/adaqfs/home/a-onl/sbs/Rootfiles";
 // const TString ANALYSED_DIR = "/adaqfs/home/a-onl/sbs/Rootfiles/bbhodo_hist";
@@ -65,13 +67,29 @@ namespace Thodo {
   Int_t NdataBarHitPos;
   Double_t BarHitPos[nBarsTDC];
 
+  // fadc
+  Int_t NdataADCAtime;
+  Double_t ADCAtime[nADC*3];
+  Int_t NdataADCAmult;
+  Double_t ADCAmult[nADC*3];
+  Int_t NdataADCAampp;
+  Double_t ADCAampp[nADC*3];
+  Int_t NdataADCAp;
+  Double_t ADCAp[nADC*3];
+  Int_t NdataADCAped;
+  Double_t ADCAped[nADC*3];
+  Int_t NdataADCcol;
+  Double_t ADCcol[nADC*3];
+  Int_t NdataADCrow;
+  Double_t ADCrow[nADC*3];
+
 };
 
 TChain *T = 0;
 
 using namespace std;
 
-void PlotRawTDC2D(const TString InFile="bbhodo_311_1000000", Int_t nevents=-1){
+void PlotRawTDC2DfADC(const TString InFile="bbhodo_311_1000000", Int_t nevents=-1){
   // InFile is the input file without absolute path and without .root suffix
   // nevents is how many events to analyse, -1 for all
   
@@ -106,7 +124,14 @@ void PlotRawTDC2D(const TString InFile="bbhodo_311_1000000", Int_t nevents=-1){
     T->SetBranchAddress("bb.hodotdc.bar.tdc.meantime",Thodo::BarMeanTime);
     T->SetBranchAddress("bb.hodotdc.bar.tdc.timediff",Thodo::BarTimeDiff);
     T->SetBranchAddress("bb.hodotdc.bar.tdc.timehitpos",Thodo::BarHitPos);
-
+    //fadc
+    T->SetBranchAddress("bb.hodoadc.a_time",Thodo::ADCAtime);
+    T->SetBranchAddress("bb.hodoadc.a_mult",Thodo::ADCAmult);
+    T->SetBranchAddress("bb.hodoadc.a_amp_p",Thodo::ADCAampp);
+    T->SetBranchAddress("bb.hodoadc.a_p",Thodo::ADCAp);
+    T->SetBranchAddress("bb.hodoadc.ped",Thodo::ADCAped);
+    T->SetBranchAddress("bb.hodoadc.adcrow",Thodo::ADCrow);
+    T->SetBranchAddress("bb.hodoadc.adccol",Thodo::ADCcol);
 
     // enable vector size branches
     T->SetBranchAddress("Ndata.bb.hodotdc.tdc_mult",&Thodo::NdataMult); 
@@ -122,6 +147,14 @@ void PlotRawTDC2D(const TString InFile="bbhodo_311_1000000", Int_t nevents=-1){
     T->SetBranchAddress("Ndata.bb.hodotdc.bar.tdc.meantime",&Thodo::NdataBarMeanTime); 
     T->SetBranchAddress("Ndata.bb.hodotdc.bar.tdc.timediff",&Thodo::NdataBarTimeDiff); 
     T->SetBranchAddress("Ndata.bb.hodotdc.bar.tdc.timehitpos",&Thodo::NdataBarHitPos);
+    //fadc
+    T->SetBranchAddress("Ndata.bb.hodoadc.a_time",&Thodo::NdataADCAtime);
+    T->SetBranchAddress("Ndata.bb.hodoadc.a_mult",&Thodo::NdataADCAmult);
+    T->SetBranchAddress("Ndata.bb.hodoadc.a_amp_p",&Thodo::NdataADCAampp);
+    T->SetBranchAddress("Ndata.bb.hodoadc.a_p",&Thodo::NdataADCAp);
+    T->SetBranchAddress("Ndata.bb.hodoadc.ped",&Thodo::NdataADCAped);
+    T->SetBranchAddress("Ndata.bb.hodoadc.adcrow",&Thodo::NdataADCrow);
+    T->SetBranchAddress("Ndata.bb.hodoadc.adccol",&Thodo::NdataADCcol);
 
   }//setting tree
   
@@ -226,6 +259,74 @@ void PlotRawTDC2D(const TString InFile="bbhodo_311_1000000", Int_t nevents=-1){
   TH2F* h2d_BarMT   = new TH2F("h2d_BarMT","", NTDCBins,TDCBinLow,TDCBinHigh,nBarsTDC+1,0,nBarsTDC+1);
   TH2F* h2d_BarTD   = new TH2F("h2d_BarTD","", 100,-30,30,nBarsTDC+1,0,nBarsTDC+1);
 
+
+  // fadc plots
+  //==================================================== a_p
+  // a_p is the integral in pC with the pedestal subtracted
+  TH2F* ha_pL = new TH2F("ha_pL", "", 100,-100,100, 90,-0.5,89.5);
+  TH2F* ha_pR = new TH2F("ha_pR", "", 100,-100,100, 90,-0.5,89.5);
+  ha_pL->GetXaxis()->SetTitle("fADC a_p [pC]");
+  ha_pL->GetYaxis()->SetTitle("PMT number (Left)");
+  ha_pR->GetXaxis()->SetTitle("fADC a_p [pC]");
+  ha_pR->GetYaxis()->SetTitle("PMT number (Right)");
+  //==================================================== a_amp_p
+  // a_amp_p is the pedestal subtracted amplitude in mV
+  TH2F* ha_amp_pL = new TH2F("ha_amp_pL", "", 100,-100,100, 90,-0.5,89.5);
+  TH2F* ha_amp_pR = new TH2F("ha_amp_pR", "", 100,-100,100, 90,-0.5,89.5);
+  ha_amp_pL->GetXaxis()->SetTitle("fADC a_amp_p [mV]");
+  ha_amp_pL->GetYaxis()->SetTitle("PMT number (Left)");
+  ha_amp_pR->GetXaxis()->SetTitle("fADC a_amp_p [mV]");
+  ha_amp_pR->GetYaxis()->SetTitle("PMT number (Right)");
+  //==================================================== ped
+  // a_ped is the fadc ped
+  TH2F* ha_pedL = new TH2F("ha_pedL", "", 125,50,150, 90,-0.5,89.5);
+  TH2F* ha_pedR = new TH2F("ha_pedR", "", 125,50,150, 90,-0.5,89.5);
+  ha_pedL->GetXaxis()->SetTitle("fADC ped [?]");
+  ha_pedL->GetYaxis()->SetTitle("PMT number (Left)");
+  ha_pedR->GetXaxis()->SetTitle("fADC ped [?]");
+  ha_pedR->GetYaxis()->SetTitle("PMT number (Right)");
+
+  // tot v fadc plots
+  Int_t tdcstartleft = adcbarstart;
+  Int_t tdcstartright = adcbarstart+90;
+  // histograms
+  TH2F *hTOTvAmppL[nBarsADC];
+  TH2F *hTOTvAmppR[nBarsADC];
+  TH2F *hTOTvApL[nBarsADC];
+  TH2F *hTOTvApR[nBarsADC];
+  for(Int_t bar=0; bar<(nBarsADC); bar++){
+    Int_t adcbar = adcbarstart + bar;
+    hTOTvAmppL[bar] = new TH2F(TString::Format("hTOTvAmppL_Bar%d",adcbar),
+			       TString::Format("hTOTvAmppL_Bar%d",adcbar),
+			       100, -100, 100,
+			       100, 0, 50
+			       );
+    hTOTvAmppR[bar] = new TH2F(TString::Format("hTOTvAmppR_Bar%d",adcbar),
+			       TString::Format("hTOTvAmppR_Bar%d",adcbar),
+			       100, -100, 100,
+			       100, 0, 50
+			       );
+    hTOTvAmppL[bar]->GetXaxis()->SetTitle("fADC amp_p [mV]");
+    hTOTvAmppL[bar]->GetYaxis()->SetTitle("TOT (ns)");
+    hTOTvAmppR[bar]->GetXaxis()->SetTitle("fADC amp_p [mV]");
+    hTOTvAmppR[bar]->GetYaxis()->SetTitle("TOT (ns)");
+    hTOTvApL[bar] = new TH2F(TString::Format("hTOTvApL_Bar%d",adcbar),
+			     TString::Format("hTOTvApL_Bar%d",adcbar),
+			     100, -100, 100,
+			     100, 0, 50
+			     );
+    hTOTvApR[bar] = new TH2F(TString::Format("hTOTvApR_Bar%d",adcbar),
+			     TString::Format("hTOTvApR_Bar%d",adcbar),
+			     100, -100, 100,
+			     100, 0, 50
+			     );
+    hTOTvApL[bar]->GetXaxis()->SetTitle("fADC a_p [pC]");
+    hTOTvApL[bar]->GetYaxis()->SetTitle("TOT (ns)");
+    hTOTvApR[bar]->GetXaxis()->SetTitle("fADC amp_p [pC]");
+    hTOTvApR[bar]->GetYaxis()->SetTitle("TOT (ns)");
+  }//bar loop
+
+
   //================================================================= Event Loop
   // variables outside event loop
   Int_t EventCounter = 0;
@@ -286,6 +387,43 @@ void PlotRawTDC2D(const TString InFile="bbhodo_311_1000000", Int_t nevents=-1){
       h2d_BarMT->Fill(Thodo::BarMeanTime[tdcbar], bar);
       h2d_BarTD->Fill(Thodo::BarTimeDiff[tdcbar], bar);
     }
+
+    // fadc plots
+    for(Int_t rowinc=0; rowinc<Thodo::NdataADCrow; rowinc++){
+      if(Thodo::ADCAmult[rowinc]>0 && Thodo::ADCAtime[rowinc]>0.0){
+	if(Thodo::ADCrow[rowinc]==0){
+	  ha_pL->Fill(Thodo::ADCAp[rowinc], Thodo::ADCcol[rowinc]);
+	  ha_amp_pL->Fill(Thodo::ADCAampp[rowinc], Thodo::ADCcol[rowinc]);
+	  ha_pedL->Fill(Thodo::ADCAped[rowinc], Thodo::ADCcol[rowinc]);
+	  //tot v adc
+	  for(Int_t el=0; el<Thodo::NdataRawElID; el++){
+	    // if(Thodo::RawElID[el]==(tdcstartleft+rowinc)){
+	    if(Thodo::RawElID[el]<90 && Thodo::RawElID[el]==(tdcstartleft+(Int_t)Thodo::ADCcol[rowinc])){
+	      hTOTvAmppL[(Int_t)Thodo::ADCcol[rowinc]]->Fill(Thodo::ADCAampp[rowinc],
+							     Thodo::RawElTot[el]);
+	      hTOTvApL[(Int_t)Thodo::ADCcol[rowinc]]->Fill(Thodo::ADCAp[rowinc],
+							     Thodo::RawElTot[el]);
+	    }
+	  }//loop on raw tdc
+	}//left
+	if(Thodo::ADCrow[rowinc]==1){
+	  ha_pR->Fill(Thodo::ADCAp[rowinc], Thodo::ADCcol[rowinc]);
+	  ha_amp_pR->Fill(Thodo::ADCAampp[rowinc], Thodo::ADCcol[rowinc]);
+	  ha_pedR->Fill(Thodo::ADCAped[rowinc], Thodo::ADCcol[rowinc]);
+	  //tot v adc
+	  for(Int_t el=0; el<Thodo::NdataRawElID; el++){
+	    if(Thodo::RawElID[el]>89 && Thodo::RawElID[el]==(tdcstartright+(Int_t)Thodo::ADCcol[rowinc])){
+	      hTOTvAmppR[(Int_t)Thodo::ADCcol[rowinc]]->Fill(Thodo::ADCAampp[rowinc],
+							     Thodo::RawElTot[el]);
+	      hTOTvApR[(Int_t)Thodo::ADCcol[rowinc]]->Fill(Thodo::ADCAp[rowinc],
+							   Thodo::RawElTot[el]);
+	    }
+	  }//loop on raw tdc
+	}//right
+      }//cut on no zero hit
+    }// row inc loop ie loop over 64
+
+
   }// event loop
   
     
@@ -405,6 +543,20 @@ void PlotRawTDC2D(const TString InFile="bbhodo_311_1000000", Int_t nevents=-1){
   h1d_BarMT->GetXaxis()->SetTitle("Hodoscope Bar Number");
   h1d_BarMT->Sumw2();
   h1d_BarMT->Write();
+
+  // fadc
+  ha_pL->Write();
+  ha_amp_pL->Write();
+  ha_pedL->Write();
+  ha_pR->Write();
+  ha_amp_pR->Write();
+  ha_pedR->Write();
+  for(Int_t b=0; b<nBarsADC; b++){
+    hTOTvAmppL[b]->Write();
+    hTOTvAmppR[b]->Write();
+    hTOTvApL[b]->Write();
+    hTOTvApR[b]->Write();
+  }
 
 
   //========================================================== Close output file
