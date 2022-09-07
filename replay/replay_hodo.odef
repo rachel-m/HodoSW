@@ -1,7 +1,48 @@
-# Sample outout definition file
+#-----------------------------------------------------------------------------
+# Raw TDC and FADC data
+#-----------------------------------------------------------------------------
 
-###block *
-
-#block bb.hodo.*
-block bb.hodoadc.*
 block bb.hodotdc.*
+block bb.hodoadc.*
+
+#-----------------------------------------------------------------------------
+# 2D TDC histograms
+#-----------------------------------------------------------------------------
+
+# Reference channels
+TH2D h2d_RefLE 'BBHodo Ref time (ns) vs PMT' bb.hodotdc.Ref.hits.t bb.hodotdc.Ref.hits.TDCelemID  100 200 1200 2 0 2 
+TH2D h2d_RefTE 'BBHodo Ref TE time (ns) vs PMT' bb.hodotdc.Ref.hits.t_te bb.hodotdc.Ref.hits.TDCelemID  100 200 1200 2 0 2 
+TH2D h2d_RefTot 'BBHodo Ref Tot (ns) vs PMT' bb.hodotdc.Ref.hits.t_tot bb.hodotdc.Ref.hits.TDCelemID  50 0 50 2 0 2 
+TH2D h2d_RefMult 'BBHodo Ref PMT Multiplicity vs PMT' bb.hodotdc.Ref.tdc_mult bb.hodotdc.Ref.tdcelemID  5 1 5 2 0 2 
+
+# Raw PMT hits
+TH2D h2d_RawLEFull 'BBHodo LE time (ns) vs PMT' bb.hodotdc.hits.t bb.hodotdc.hits.TDCelemID  400 -4000 4000 180 0 180
+TH2D h2d_RawLE 'BBHodo LE time (ns) vs PMT' bb.hodotdc.hits.t bb.hodotdc.hits.TDCelemID  150 -150 0 180 0 180
+TH2D h2d_RawTE 'BBHodo TE time (ns) vs PMT' bb.hodotdc.hits.t_te bb.hodotdc.hits.TDCelemID  150 -150 0 180 0 180 
+TH2D h2d_RawTot 'BBHodo Tot (ns) vs PMT' bb.hodotdc.hits.t_tot bb.hodotdc.hits.TDCelemID  40 0 40 180 0 180 
+TH2D h2d_RawMult 'BBHodo PMT Multiplicity vs PMT' bb.hodotdc.tdc_mult bb.hodotdc.tdcelemID  5 1 5 180 0 180 
+TH2D h2d_RawMultHits 'BBHodo PMT Multiplicity vs PMT' bb.hodotdc.tdc_mult bb.hodotdc.hits.TDCelemID  5 1 5 180 0 180 
+TH2D h2d_RawMultZero 'BBHodo PMT Multiplicity vs PMT' bb.hodotdc.tdc_mult bb.hodotdc.tdcelemID  6 0 5 180 0 180 
+
+# PMT TDC info
+TH2F h2d_LEl 'BBHodo left PMT vs LE (ns)' bb.hodotdc.bar.tdc.L.le bb.hodotdc.bar.tdc.id   100 -50 50 89 0 89
+TH2F h2d_LEr 'BBHodo right PMT vs LE (ns)' bb.hodotdc.bar.tdc.R.le bb.hodotdc.bar.tdc.id   100 -50 50 89 0 89
+TH2F h2d_TEl 'BBHodo left PMT vs TE (ns)' bb.hodotdc.bar.tdc.L.te bb.hodotdc.bar.tdc.id   100 -50 50 89 0 89
+TH2F h2d_TEr 'BBHodo right PMT vs TE (ns)' bb.hodotdc.bar.tdc.R.te bb.hodotdc.bar.tdc.id   100 -50 50 89 0 89
+TH2F h2d_TOTl 'BBHodo left PMT vs TOT (ns)' bb.hodotdc.bar.tdc.L.tot bb.hodotdc.bar.tdc.id   100 0 50 89 0 89
+TH2F h2d_TOTr 'BBHodo Right PMT vs TOT (ns)' bb.hodotdc.bar.tdc.R.tot bb.hodotdc.bar.tdc.id   100 0 50 89 0 89
+TH2F h2d_Mult 'BBHodo PMT vs TDC Multiplicity' bb.hodotdc.tdc_mult bb.hodotdc.tdcelemID  5 1 5 180 0 180 
+
+# Bar hits
+TH2D h2d_BarMT 'BBHodo Bar mean time (ns) vs bar' bb.hodotdc.bar.tdc.meantime bb.hodotdc.bar.tdc.id  100 -50 50 89 0 89 
+TH2D h2d_BarTD 'BBHodo Bar time diff (ns) vs bar' bb.hodotdc.bar.tdc.timediff bb.hodotdc.bar.tdc.id   50 -20 20 89 0 89
+
+#-----------------------------------------------------------------------------
+# 2D FADC histograms
+#-----------------------------------------------------------------------------
+
+TH2D h2d_FADC_a_p 'BBHodo FADC integral (pC)' bb.hodoadc.a_p bb.hodoadc.adcelemID  70 3 73 65 0 65
+TH2D h2d_FADC_amp_p 'BBHodo FADC amplitide (mV)' bb.hodoadc.a_amp_p bb.hodoadc.adcelemID  70 6 76 65 0 65
+TH2D h2d_FADC_ped 'BBHodo FADC pedestal' bb.hodoadc.ped bb.hodoadc.adcelemID  100 50 150 65 0 65
+TH2D h2d_FADC_mult 'BBHodo FADC multiplicity' bb.hodoadc.a_mult bb.hodoadc.adcelemID  5 1 5 65 0 65
+TH2D h2d_FADC_time 'BBHodo FADC time (ns)' bb.hodoadc.a_time bb.hodoadc.adcelemID  200 200 400 65 0 65

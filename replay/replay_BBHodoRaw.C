@@ -16,115 +16,95 @@
 #include "SBSBBShower.h"
 #include "SBSTimingHodoscope.h"
 
-// Simple example replay script
-//
-// Ole Hansen, 11 April 2016
-void replay_BBHodoRaw(int run_number = 124, uint nev = -1, uint nseg = 0)
+void replay_BBHodoRaw(int run_number = 10746, uint nev = 50000, uint firstseg = 0, TString exp = /*"bbhodo"*/ "e1209019")
 {
-  //load SBS-offline
-  //gSystem->Load("libsbs.so");
-  //--- Define the experimental configuration, i.e. spectrometers, detectors ---
-
-  //THaHRS* bb = new THaHRS("R", "Right HRS" );
-  //hrs->AddDetector( new THaVDC("vdc", "Vertical Drift Chambers") );
-  // gHaApps->Add(hrs);
+  uint nseg = 0;
   
   SBSBigBite* bigbite = new SBSBigBite("bb", "BigBite spectrometer" );
   SBSTimingHodoscope* hodotdc = new  SBSTimingHodoscope("hodotdc", "BigBite hodo");
   hodotdc->SetModeTDC(SBSModeTDC::kTDC);
   hodotdc->SetModeADC(SBSModeADC::kNone);
   hodotdc->SetStoreRawHits(true);
+  hodotdc->SetStoreEmptyElements(true);
+
   SBSTimingHodoscope* hodoadc = new  SBSTimingHodoscope("hodoadc", "BigBite hodo");
   hodoadc->SetModeTDC(SBSModeTDC::kNone);
-  hodoadc->SetModeADC(SBSModeADC::kADCSimple);
-  //bigbite->AddDetector( new THaShower("ps", "BigBite preshower") );
+  hodoadc->SetModeADC(SBSModeADC::kADC);
   bigbite->AddDetector(hodotdc);
   bigbite->AddDetector(hodoadc);
-  //bigbite->AddDetector( new SBSBBShower("sh", "BigBite shower") );
   gHaApps->Add(bigbite);
-  
-  // Ideal beam (perfect normal incidence and centering)
-  // THaIdealBeam* ib = new THaIdealBeam("IB", "Ideal beam");
-  // gHaApps->Add(ib);
 
   //--- Set up the run we want to replay ---
 
   // This often requires a bit of coding to search directories, test
   // for non-existent files, etc.
-  TString exp = "bbhodo";
   // Create file name patterns.
-  string firstname = "bbhodo_%d";
+  string firstname = /*"bbhodo_%d"*/ "e1209016__%d";
   string endname = Form(".evio.%d",nseg);
-  //string endname = Form(".evio");
   string combined(string(firstname)+endname);
-   const char* RunFileNamePattern = combined.c_str();
+  const char* RunFileNamePattern = combined.c_str();
   vector<TString> pathList;
   pathList.push_back(".");
-  pathList.push_back(Form("%s/data",".."));
+  pathList.push_back(Form("%s/data1/","/adaqeb1"));
+  pathList.push_back("/cache/halla/sbs/raw");
 
-   THaAnalyzer* analyzer = new THaAnalyzer;
-THaEvent* event = new THaEvent;
+  THaAnalyzer* analyzer = new THaAnalyzer;
+  THaEvent* event = new THaEvent;
   THaRun* run = 0;
   int seg = 0;
   bool seg_ok = true;
+  
+  if (firstseg == 0) seg = 0;
+  else seg = firstseg;
+  
   while(seg_ok) {
     TString data_fname;
-    data_fname = TString::Format("%s/bbhodo_%d.evio.%d",getenv("DATA_DIR"),run_number,seg);
- //new THaRun( pathList, Form(RunFileNamePattern, run_number) );
+    data_fname = TString::Format("%s/%s_%d.evio.0.%d",getenv("DATA_DIR"),exp.Data(),run_number,seg);
     std::cout << "Looking for segment " << seg << " file " << data_fname.Data() << std::endl;
     if( gSystem->AccessPathName(data_fname)) {
       seg_ok = false;
       std::cout << "Segment " << seg << " not found. Exiting" << std::endl;
       continue;
     }
-   run = new THaRun(data_fname);
+
+    
+    run = new THaRun(data_fname);
     run->SetLastEvent(nev);
 
-  run->SetDataRequired(0);//for the time being
-   run->SetDate(TDatime());
-  
-  
+    run->SetDataRequired(0);//for the time being
+    run->SetDate(TDatime());
 
-  analyzer->SetEvent( event );
-  TString out_dir = gSystem->Getenv("OUT_DIR");
-  if( out_dir.IsNull() )  out_dir = ".";
-  TString out_file = out_dir + "/" + exp + Form("_%d_%d.root", run_number,nev);
+    analyzer->SetEvent( event );
+    TString out_dir = gSystem->Getenv("OUT_DIR");
+    if( out_dir.IsNull() )  out_dir = ".";
+    TString out_file = out_dir + "/" + exp + Form("_bbhodo_%d_%d.root", run_number,nev);
 
-  analyzer->SetOutFile( out_file );
-  
-  analyzer->SetCutFile( "replay.cdef" );
-  //  analyzer->SetOdefFile( "replay.odef" );
-  analyzer->SetOdefFile( "replayhodo.odef" );
-  analyzer->SetVerbosity(2);  // write cut summary to stdout
-  analyzer->EnableBenchmarks();
+    analyzer->SetOutFile( out_file );
+    
+    analyzer->SetCutFile( "replay_hodo.cdef" );
+    analyzer->SetOdefFile( "replay_hodo.odef" );
+    analyzer->SetVerbosity(2);  // write cut summary to stdout
+    analyzer->EnableBenchmarks();
 
-  //--- Analyze the run ---
-  // Here, one could replay more than one run with
-  // a succession of Process calls. The results would all go into the
-  // same ROOT output file
-
-  run->Print();
-  
-
-  analyzer->Process(run);
+    //--- Analyze the run ---
+    // Here, one could replay more than one run with
+    // a succession of Process calls. The results would all go into the
+    // same ROOT output file
+    
+    run->Print();
+    analyzer->Process(run);
     // Cleanup this run segment
     delete run;
     
     seg++; // Increment for next search
- }
+  }
+  
 
-  // Clean up
 
   analyzer->Close();
   delete analyzer;
-  //gHaCuts->Clear();
   gHaVars->Clear();
   gHaPhysics->Delete();
   gHaApps->Delete();
 
-  // Open the ROOT file so that a user doing interactive analysis can 
-  // immediately look at the results. Of course, don't do this in batch jobs!
-  // To close the file later, simply type "delete rootfile" or just exit
-
-  //TFile* rootfile = new TFile( out_file, "READ" );
 }
