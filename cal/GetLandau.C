@@ -50,9 +50,9 @@ TChain *C;
 
 using namespace std;
 
-void GetLandau(const Int_t RunNum=11590, Int_t nevents=-1, bool DoBar=true,
-	       Double_t FitStart=0.0, Double_t FitStop = 1000.0,
-	       Double_t Width=40.0, Int_t HistRange=3000){
+void GetLandau(const Int_t RunNum=14015, Int_t nevents=-1, bool DoBar=false,
+	       Double_t FitStart=0.0, Double_t FitStop = 80.0,
+	       Double_t Width=40.0, Int_t HistRange=1000){
   // InFile is the input file without absolute path and without .root suffix
   // nevents is how many events to analyse, -1 for all
   // FitStart is the guess for the valley position before the landau, will be fit start range, in adc bins
@@ -152,7 +152,8 @@ void GetLandau(const Int_t RunNum=11590, Int_t nevents=-1, bool DoBar=true,
   
   //new histo to look at 2d plot (like online plots)
   TH2F *hBarVsADC = new TH2F("hBarVsADC","",
-			     NAdcBins, AdcBinLow, AdcBinHigh,
+			     //NAdcBins, AdcBinLow, AdcBinHigh,
+			     NAdcBins, AdcBinLow, 400,
 			     nBars, 0.0+adcbarstart, nAdc+adcbarstart);
 			     
   
@@ -461,28 +462,53 @@ void GetLandau(const Int_t RunNum=11590, Int_t nevents=-1, bool DoBar=true,
   cWidth->Print("temp3.pdf");
   
  //========================================================== Draw Fit Results
-  TCanvas *cLeft = new TCanvas("cLeft",
+  //Left Bars
+  TCanvas *cLeft1 = new TCanvas("cLeft1",
   			       "Left PMTs, ADC spectra",
   			       900,700);
-  cLeft->Divide(8,4);
-  for(Int_t b=0; b<nBars; b++){
-    cLeft->cd(b+1);
-    gPad->SetLogy();
+  cLeft1->Divide(4,4);
+  for(Int_t b=0; b<nBars/2; b++){
+    cLeft1->cd(b+1);
+    //gPad->SetLogy();
     hADCL[b]->Draw();
   }
   
-  TCanvas *cRight = new TCanvas("cRight",
-  			       "Right PMTs, ADC spectra",
+  TCanvas *cLeft2 = new TCanvas("cLeft2",
+  			       "Left PMTs, ADC spectra",
   			       900,700);
-  cRight->Divide(8,4);
-  for(Int_t b=0; b<nBars; b++){
-    cRight->cd(b+1);
-    gPad->SetLogy();
+  cLeft2->Divide(4,4);
+  for(Int_t b=(nBars/2); b<nBars; b++){
+    cLeft2->cd(b+1-nBars/2);
+    //gPad->SetLogy();
+    hADCL[b]->Draw();
+  }
+  
+
+  //Right Bars
+  TCanvas *cRight1 = new TCanvas("cRight1",
+				"Right1 PMTs, ADC spectra",
+				900,700);
+  cRight1->Divide(4,4);
+  for(Int_t b=0; b<nBars/2; b++){
+    cRight1->cd(b+1);
+    //gPad->SetLogy();
     hADCR[b]->Draw();
   }
 
-  cLeft->Print("temp4.pdf");
-  cRight->Print("temp5.pdf");
+  TCanvas *cRight2 = new TCanvas("cRight2",
+  			       "Right2 PMTs, ADC spectra",
+  			       900,700);
+  cRight2->Divide(4,4);
+  for(Int_t b=nBars/2; b<nBars; b++){
+    cRight2->cd(b+1-nBars/2);
+    //gPad->SetLogy();
+    hADCR[b]->Draw();
+  }
+
+  cLeft1->Print("temp41.pdf");
+  cLeft2->Print("temp42.pdf");
+  cRight1->Print("temp51.pdf");
+  cRight2->Print("temp52.pdf");
   
   TCanvas *c2D = new TCanvas("c2D",
 			     "2D Online Plot",
@@ -498,8 +524,10 @@ void GetLandau(const Int_t RunNum=11590, Int_t nevents=-1, bool DoBar=true,
   gDirectory->mkdir("ADC");
   f->cd("ADC");
   // write the canvases with multiplots
-  cLeft->Write();
-  cRight->Write();
+  cLeft1->Write();
+  cLeft2->Write();
+  cRight1->Write();
+  cRight2->Write();
   c2D->Write();
   TCanvas *cadc = new TCanvas();
   cadc->cd();
@@ -553,8 +581,10 @@ void GetLandau(const Int_t RunNum=11590, Int_t nevents=-1, bool DoBar=true,
   //delete cMPV;
   //delete cWidth;
   //delete cadc;
-  //cLeft->Close();
-  //cRight->Close();
+  //cLeft1->Close();
+  //cLeft2->Close();
+  //cRight1->Close();
+  //cRight2->Close();
   //cConstants->Close();
 
   //================================================================== End Macro
