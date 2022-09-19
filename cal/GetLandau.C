@@ -34,27 +34,18 @@ const Int_t adcbarstart = 32;
 TString REPLAYED_DIR = "/volatile/halla/sbs/gpenman/Rootfiles";
 TString ANALYSED_DIR = "/volatile/halla/sbs/gpenman/Analysed";
 
-/*
-namespace Thodo {
-  Int_t NdataAdcBar;
-  Double_t ADCBar[nBars];
-  Int_t NdataAdcL;
-  Double_t ADCValL[nBars];
-  Int_t NdataAdcR;
-  Double_t ADCValR[nBars];
-  //  Int_t ADCBarOff[nBars];
-};
-*/
 
 TChain *C;
+SBSTree *T;
 
 using namespace std;
 
-void GetLandau(const Int_t RunNum=14015, Int_t nevents=-1, bool DoBar=false,
+void GetLandau(const Int_t RunNum=14032, Int_t nevents=-1, bool DoBars=false,
 	       Double_t FitStart=0.0, Double_t FitStop = 80.0,
 	       Double_t Width=40.0, Int_t HistRange=1000){
-  // InFile is the input file without absolute path and without .root suffix
+  // RunNum is the run number to analyze
   // nevents is how many events to analyse, -1 for all
+  // DoBars is to use generic detector variables or hodoscope class bar variables
   // FitStart is the guess for the valley position before the landau, will be fit start range, in adc bins
   // FitStop is the upper limit of the fit range
   // Width if initial guess for the width of the landau in adc bins
@@ -62,47 +53,32 @@ void GetLandau(const Int_t RunNum=14015, Int_t nevents=-1, bool DoBar=false,
 
   // To execute
   // .L GetLandau.C+
-  // GetLandau("filename",-1,150.0,1000.0,40.0,3000)
+  // GetLandau("RunNumber",-1,150.0,1000.0,40.0,3000)
 
-  TString prefix, sRunNum, snevents, sInFile;
+  TString prefix, sRunNum, sInFile;
   //========================================================= Get data from tree
   if(!C) { 
     prefix = "e1209019_bbhodo_";
     sRunNum = std::to_string(RunNum);
-    snevents = std::to_string(nevents);
     //TString sInFile = REPLAYED_DIR + "/" + InFile + ".root";
     sInFile = REPLAYED_DIR + "/" + prefix + sRunNum;
     cout << "Adding " << sInFile << endl;
     C = new TChain("T");
     C->Add(sInFile+"*");
-    
-    // disable all branches
-    //C->SetBranchStatus("*",0);
-    // enable adc branches
-    //C->SetBranchStatus("bb.hodoadc.*",1);
-    //C->SetBranchAddress("bb.hodoadc.bar.adc.id",Thodo::ADCBar);
-    //C->SetBranchAddress("bb.hodoadc.bar.adc.L.ap",Thodo::ADCValL);
-    //C->SetBranchAddress("bb.hodoadc.bar.adc.R.ap",Thodo::ADCValR);
-    // C->SetBranchAddress("bb.hodoadc.adcbaroff",Thodo::ADCBarOff);
-    // enable vector size branches
-    //C->SetBranchStatus("Ndata.bb.hodoadc.*",1);
-    //C->SetBranchAddress("Ndata.bb.hodoadc.bar.adc.id",&Thodo::NdataAdcBar);
-    //C->SetBranchAddress("Ndata.bb.hodoadc.bar.adc.L.ap",&Thodo::NdataAdcL);
-    //C->SetBranchAddress("Ndata.bb.hodoadc.bar.adc.R.ap",&Thodo::NdataAdcR);  
-    
+  }
+  
+  if(!T){
+    T = new  SBSTree(C);
   }//setting tree
   
   
   
   //========================================================= Check no of events
-  SBSTree *T = new  SBSTree(C);
-  
   Int_t Nev = C->GetEntries();
   cout << "N entries in tree is " << Nev << endl;
   Int_t NEventsAnalysis;
   if(nevents==-1) NEventsAnalysis = Nev;
   else NEventsAnalysis = nevents;
-  //NEventsAnalysis = 500000;
   cout << "Running analysis for " << NEventsAnalysis << " events" << endl;
   
 
@@ -116,7 +92,7 @@ void GetLandau(const Int_t RunNum=14015, Int_t nevents=-1, bool DoBar=false,
   
   //==================================================== Create output root file
   // root file for viewing fits
-  TString outrootfile = ANALYSED_DIR + "/LandauFits_" + prefix + sRunNum + "_" + DoBar + ".root";
+  TString outrootfile = ANALYSED_DIR + "/LandauFits_" + prefix + sRunNum + "_" + DoBars + ".root";
   TFile *f = new TFile(outrootfile, "RECREATE");
 
 
@@ -124,7 +100,7 @@ void GetLandau(const Int_t RunNum=14015, Int_t nevents=-1, bool DoBar=false,
   //==================================================== Create output text file
   // text file for recording fit results
   ofstream landautextfile;
-  TString outtxtfile = ANALYSED_DIR + "/LandauFits_" + prefix + sRunNum + "_" + DoBar + ".txt";
+  TString outtxtfile = ANALYSED_DIR + "/LandauFits_" + prefix + sRunNum + "_" + DoBars + ".txt";
   landautextfile.open(outtxtfile);
 
 
@@ -198,7 +174,7 @@ void GetLandau(const Int_t RunNum=14015, Int_t nevents=-1, bool DoBar=false,
     if (event % 100000 == 0) 
       cout << event << "/" << NEventsAnalysis << endl;
     
-    if (DoBar == false){
+    if (!DoBars){
       //assumming mapping goes 0-31 L, 32-64 R.
       Int_t NadcelemID = T->Ndata_bb_hodoadc_adcelemID;
       //cout << "Number of adc hits: " << NadcelemID << endl;
@@ -210,21 +186,20 @@ void GetLandau(const Int_t RunNum=14015, Int_t nevents=-1, bool DoBar=false,
 	//cout for debugging
 	//cout << "id: " <<  adcID << " a_p: " << a_p << endl;
 	
-	if (adcID >= 0 && adcID <= 31){ 
+	if (adcID >= 0 && adcID < 32){ 
 	  hADCL[adcID]->Fill(a_p);
 	  hBarVsADC->Fill(a_p,adcID+adcbarstart);
-	}else if (adcID >= 32 && adcID <= 63){
-	  hADCR[adcID-32]->Fill(a_p);
+	}else if (adcID >= 32 && adcID < 64){
+	  hADCR[adcID-adcbarstart]->Fill(a_p);
 	  hBarVsADC->Fill(a_p,adcID+adcbarstart);
 	}
 	else{
-	   cout << "WTF?" << endl;
+	   cout << "Bar value out of range 0-63, check offset value! " << adcID << endl;
 	   continue;
 	}
       }
-    }else if (DoBar == true){
+    }else if (DoBars){
       Int_t NadcbarID = (int)T->Ndata_bb_hodoadc_bar_adc_id;
-      //cout << "Number of bar entries: " << NadcbarID << endl;
       for (Int_t i=0; i<NadcbarID; i++){
 	Double_t DadcbarID = T->bb_hodoadc_bar_adc_id[i];
 	Int_t adcbarID = (int)T->bb_hodoadc_bar_adc_id[i];
@@ -238,10 +213,10 @@ void GetLandau(const Int_t RunNum=14015, Int_t nevents=-1, bool DoBar=false,
 	  continue;
 	}
 	else{
-	  hADCL[adcbarID]->Fill(L_a_p);
-	  hADCR[adcbarID]->Fill(R_a_p);
+	  hADCL[adcbarID - adcbarstart]->Fill(L_a_p);
+	  hADCR[adcbarID - adcbarstart]->Fill(R_a_p);
 	  hBarVsADC->Fill(L_a_p, adcbarID);
-	  hBarVsADC->Fill(R_a_p, adcbarID);
+	  hBarVsADC->Fill(R_a_p, adcbarID+adcbarstart);
 	}      
       }
     }
@@ -272,8 +247,7 @@ void GetLandau(const Int_t RunNum=14015, Int_t nevents=-1, bool DoBar=false,
   for(Int_t bar=0; bar<(nBars); bar++){
     Int_t b = adcbarstart+bar;
 
-    //get info on histogram to set initial pars
-    Int_t nBinsL = hADCL[bar]->GetNbinsX();
+    //get info on histogram to set initial pars    Int_t nBinsL = hADCL[bar]->GetNbinsX();
     Int_t nBinsR = hADCR[bar]->GetNbinsX();
     if(nBinsL!=nBinsR){
       cout << "WARNING - check the hADCL and hADCR nbins matches" << endl;
@@ -571,7 +545,7 @@ void GetLandau(const Int_t RunNum=14015, Int_t nevents=-1, bool DoBar=false,
   gWidthL->Write();
   gWidthR->Write();
 
-  gSystem->Exec(Form("pdfunite temp*.pdf LandauPlots_%i_%d.pdf",RunNum,DoBar));
+  gSystem->Exec(Form("pdfunite temp*.pdf LandauPlots_%i_%d.pdf",RunNum,DoBars));
   gSystem->Exec("rm temp*.pdf");
 
   //========================================================== Close output file

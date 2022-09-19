@@ -43,7 +43,7 @@ SBSTree *T;
 using namespace std;
 
 
-void FitTOT(const Int_t RunNum=14032, Int_t nevents=-1, bool DoBars=false, Int_t DoFitTOT=0){
+void FitTOT(const Int_t RunNum=14032, Int_t nevents=-1, bool DoBars=false, Int_t DoFitTOT=1){
   // RunNum is the run number to analyze
   // nevents is how many events to analyse, -1 for all
   // DoFitTOT set this to 1 if you want to fit TOT v ADC
@@ -53,13 +53,11 @@ void FitTOT(const Int_t RunNum=14032, Int_t nevents=-1, bool DoBars=false, Int_t
   // .L FitTOT.C+
   // FitTOT("RunNumber",-1,1)
   
-  TString prefix, sRunNum, snevents, sInFile;
+  TString prefix, sRunNum, sInFile;
   //========================================================= Get data from tree
   if(!C) { 
     prefix = "e1209019_bbhodo_";
     sRunNum = std::to_string(RunNum);
-    snevents = std::to_string(nevents);
-    //TString sInFile = REPLAYED_DIR + "/" + InFile + ".root";
     sInFile = REPLAYED_DIR + "/" + prefix + sRunNum;
     cout << "Adding " << sInFile << endl;
     C = new TChain("T");
@@ -78,7 +76,6 @@ void FitTOT(const Int_t RunNum=14032, Int_t nevents=-1, bool DoBars=false, Int_t
   Int_t NEventsAnalysis;
   if(nevents==-1) NEventsAnalysis = Nev;
   else NEventsAnalysis = nevents;
-  NEventsAnalysis = 500000;
   cout << "Running analysis for " << NEventsAnalysis << " events" << endl;
   
   
@@ -152,8 +149,10 @@ void FitTOT(const Int_t RunNum=14032, Int_t nevents=-1, bool DoBars=false, Int_t
 	ADCBar = (int) T->bb_hodoadc_adcelemID[adc];
 	if (ADCBar >= 0 && ADCBar < 32) ADCBar += adcbarstart;
 	else if (ADCBar >= 32 && ADCBar < 64) ADCBar += 90;
-	else cout << "Bar value out of range 0-63, check offset value! " << ADCBar << endl;
-	
+	else {
+	  cout << "Bar value out of range 0-63, check offset value! " << ADCBar << endl;
+	  continue;
+	}
 	for(Int_t tdc=0; tdc<NdataTdc; tdc++){
 	  TDCBar = (int) T->bb_hodotdc_tdcelemID[tdc];
 	  if( ADCBar == TDCBar ){
@@ -173,19 +172,20 @@ void FitTOT(const Int_t RunNum=14032, Int_t nevents=-1, bool DoBars=false, Int_t
     }else if (DoBars){
       // check for tdc hits in the bars that match the adc bars instrumented
       for(Int_t adcbar=0; adcbar<NdataAdcBar; adcbar++){
-	ADCBar = T->bb_hodoadc_bar_adc_id[adcbar]; 
-	//cout << "ADCBarOff " << (Int_t)ADCBarOff[adcbar] << endl;
+	Double_t dADCBar = T->bb_hodoadc_bar_adc_id[adcbar]; 
+	ADCBar = (int) T->bb_hodoadc_bar_adc_id[adcbar]; 
+	if (ADCBar - adcbarstart > 31) {
+	  cout << "Error: ADCBar = " << ADCBar << " is > 31. Before cast to Int_t, value is " << dADCBar << ". Skipping this event" << endl;
+	  continue;
+	}
 	for(Int_t tdcbar=0; tdcbar<NdataTdcBar; tdcbar++){
 	  TDCBar = T->bb_hodotdc_bar_tdc_id[tdcbar];
 	  if( ADCBar == TDCBar ){
-	    cout << "ADCBar " << ADCBar << endl;
 	    ADCValL = T->bb_hodoadc_bar_adc_L_ap[adcbar];
 	    ADCValR = T->bb_hodoadc_bar_adc_R_ap[adcbar];
 	    TDCTotL = T->bb_hodotdc_bar_tdc_L_tot[tdcbar];
 	    TDCTotR = T->bb_hodotdc_bar_tdc_R_tot[tdcbar];
 	  
-	    cout << "ADCBar " << ADCBar
-		 << " TDCBar " << TDCBar << endl;
 	    hTOTvADCL[adcbar-adcbarstart]->Fill(ADCValL,TDCTotL);
 	    hTOTvADCR[adcbar]->Fill(ADCValR,TDCTotR);
 	  }// if adc==tdc bar
