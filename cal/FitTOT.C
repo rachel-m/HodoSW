@@ -16,97 +16,62 @@
 #include <TLegend.h>
 #include <TPad.h>
 
+#include "SBSTree.C"
+
 const Int_t nAdc = 64;
 const Int_t nBarsADC = 32;
 const Int_t nTdc = 180;
 const Int_t nBarsTDC = 90;
 const Int_t nSide = 2;
 
-const TString REPLAYED_DIR = "/adaqfs/home/a-onl/sbs/Rootfiles";
-const TString ANALYSED_DIR = "/adaqfs/home/a-onl/sbs/Rootfiles/bbhodo_hist";
+const Int_t adcbarstart = 32;
+
+//const TString REPLAYED_DIR = "/adaqfs/home/a-onl/sbs/Rootfiles";
+//const TString ANALYSED_DIR = "/adaqfs/home/a-onl/sbs/Rootfiles/bbhodo_hist";
 
 // for local analysis at uog (please leave in comments)
 //TString REPLAYED_DIR = "/w/work0/home/rachel/HallA/BB_Hodo/FallRun2021/Replayed";
 //TString ANALYSED_DIR = "/w/work0/home/rachel/HallA/BB_Hodo/FallRun2021/Analysed";
 
-namespace Thodo {
-  Int_t NdataAdcBar;
-  Double_t ADCBar[nBarsADC];
-  Int_t NdataAdcL;
-  Double_t ADCValL[nBarsADC];
-  Int_t NdataAdcR;
-  Double_t ADCValR[nBarsADC];
-  //  Int_t ADCBarOff[nBarsADC];
+// for local analysis at jlab (please leave in comments)
+TString REPLAYED_DIR = "/volatile/halla/sbs/gpenman/Rootfiles";
+TString ANALYSED_DIR = "/volatile/halla/sbs/gpenman/Analysed";
 
-// this assumes one tdc hit per bar was selected in sbsoffline(!)
-  Int_t NdataTdcBar;
-  Double_t TDCBar[nBarsTDC];
-  Int_t NdataTotL;
-  Double_t TDCTotL[nBarsTDC];
-  Int_t NdataTotR;
-  Double_t TDCTotR[nBarsTDC];
-};
-
-TChain *T = 0;
+TChain *C;
+SBSTree *T;
 
 using namespace std;
 
 
-void FitTOT(const TString InFile="bbhodo_307_500000",
-			     Int_t nevents=-1,Int_t DoFitTOT=0){
-  // InFile is input replayed file without absolute path or .root suffix
+void FitTOT(const Int_t RunNum=14032, Int_t nevents=-1, bool DoBars=false, Int_t DoFitTOT=1){
+  // RunNum is the run number to analyze
   // nevents is how many events to analyse, -1 for all
   // DoFitTOT set this to 1 if you want to fit TOT v ADC
 
   // To execute script
   // root -l
   // .L FitTOT.C+
-  // FitTOT("filename",-1,1)
-
-
-
+  // FitTOT("RunNumber",-1,1)
+  
+  TString prefix, sRunNum, sInFile;
   //========================================================= Get data from tree
-  if(!T) { 
-    TString sInFile = REPLAYED_DIR + "/" + InFile + ".root";
+  if(!C) { 
+    prefix = "e1209019_bbhodo_";
+    sRunNum = std::to_string(RunNum);
+    sInFile = REPLAYED_DIR + "/" + prefix + sRunNum;
     cout << "Adding " << sInFile << endl;
-    T = new TChain("T");
-    T->Add(sInFile);
-    
-    // disable all branches
-    T->SetBranchStatus("*",0);
-    // enable adc branches
-    T->SetBranchStatus("bb.hodoadc.*",1);
-    T->SetBranchAddress("bb.hodoadc.adcbarid",Thodo::ADCBar);
-    // T->SetBranchAddress("bb.hodoadc.L.ap",Thodo::ADCValL);
-    // T->SetBranchAddress("bb.hodoadc.R.ap",Thodo::ADCValR);
-    T->SetBranchAddress("bb.hodoadc.L.a",Thodo::ADCValL);
-    T->SetBranchAddress("bb.hodoadc.R.a",Thodo::ADCValR);
-    //T->SetBranchAddress("bb.hodoadc.adcbaroff",Thodo::ADCBarOff);
-    T->SetBranchStatus("bb.hodotdc.*",1);
-    T->SetBranchAddress("bb.hodotdc.tdcbarid",Thodo::TDCBar);
-    T->SetBranchAddress("bb.hodotdc.L.tot",Thodo::TDCTotL);
-    T->SetBranchAddress("bb.hodotdc.R.tot",Thodo::TDCTotR);
-    // T->SetBranchAddress("bb.hodotdc.L.leW",Thodo::TDCTotL); // walk corrected
-    // T->SetBranchAddress("bb.hodotdc.R.leW",Thodo::TDCTotR); // walk corrected
-
-    // enable vector size branches
-    T->SetBranchStatus("Ndata.bb.hodoadc.*",1);
-    T->SetBranchAddress("Ndata.bb.hodoadc.adcbarid",&Thodo::NdataAdcBar);
-    T->SetBranchAddress("Ndata.bb.hodoadc.L.a",&Thodo::NdataAdcL);
-    T->SetBranchAddress("Ndata.bb.hodoadc.R.a",&Thodo::NdataAdcR); 
-    //   T->SetBranchAddress("Ndata.bb.hodoadc.L.ap",&Thodo::NdataAdcL);
-    // T->SetBranchAddress("Ndata.bb.hodoadc.R.ap",&Thodo::NdataAdcR); 
-    T->SetBranchAddress("Ndata.bb.hodotdc.tdcbarid",&Thodo::NdataTdcBar);
-    T->SetBranchAddress("Ndata.bb.hodotdc.L.tot",&Thodo::NdataTotL);
-    T->SetBranchAddress("Ndata.bb.hodotdc.R.tot",&Thodo::NdataTotR);  
-    // T->SetBranchAddress("Ndata.bb.hodotdc.L.totW",&Thodo::NdataTdcL); // walk corrected
-    // T->SetBranchAddress("Ndata.bb.hodotdc.R.totW",&Thodo::NdataATdcR); // walk corrected    
+    C = new TChain("T");
+    C->Add(sInFile+"*");
+  }
+  
+  if(!T){
+    T = new SBSTree(C);
   }//setting tree
   
   
   
   //========================================================= Check no of events
-  Int_t Nev = T->GetEntries();
+  Int_t Nev = C->GetEntries();
   cout << "N entries in tree is " << Nev << endl;
   Int_t NEventsAnalysis;
   if(nevents==-1) NEventsAnalysis = Nev;
@@ -114,21 +79,18 @@ void FitTOT(const TString InFile="bbhodo_307_500000",
   cout << "Running analysis for " << NEventsAnalysis << " events" << endl;
   
   
-  
   //==================================================== Check the bar offset
-  T->GetEntry(0);
+  //T->GetEntry(0);
   // Float_t adcbarstart = Thodo::ADCBarOff[0];
-  cout << "Thodo::ADCBar[adcbar] " << Thodo::ADCBar[0] << endl;
-  Int_t adcbarstart = Thodo::ADCBar[0];
+  //cout << "Thodo::ADCBar[adcbar] " << Thodo::ADCBar[0] << endl;
+  //Int_t adcbarstart = Thodo::ADCBar[0];
   
-
 
   //==================================================== Create output root file
   // root file for viewing fits
-  TString outrootfile = ANALYSED_DIR + "/TOTFits_" + InFile + ".root";
+  TString outrootfile = ANALYSED_DIR + "/TOTFits_" + prefix + sRunNum + "_" + ".root";
   TFile *f = new TFile(outrootfile, "RECREATE");
-
-
+  
 
   //===================================================== Histogram Declarations
   // number of adc bins
@@ -175,23 +137,65 @@ void FitTOT(const TString InFile="bbhodo_307_500000",
 				      EventCounter << "/" <<
 				      NEventsAnalysis << endl;
 
-    // check for tdc hits in the bars that match the adc bars instrumented
-    for(Int_t adcbar=0; adcbar<Thodo::NdataAdcBar; adcbar++){
-      // cout << "Thodo::ADCBarOff " << (Int_t)Thodo::ADCBarOff[adcbar] << endl;
-      for(Int_t tdcbar=0; tdcbar<Thodo::NdataTdcBar; tdcbar++){
-	if((Thodo::ADCBar[adcbar])==Thodo::TDCBar[tdcbar]){
-	  // cout << "Thodo::ADCBar[adcbar] " << Thodo::ADCBar[adcbar]
-	  //      << " Thodo::TDCBar[tdcbar] " << Thodo::TDCBar[tdcbar] << endl;
-	  hTOTvADCL[adcbar]->Fill(Thodo::ADCValL[adcbar],Thodo::TDCTotL[tdcbar]);
-	  hTOTvADCR[adcbar]->Fill(Thodo::ADCValR[adcbar],Thodo::TDCTotR[tdcbar]);
-	}// if adc==tdc bar
-      }// tdc bar loop
-    }// adc bar loop
+    Int_t NdataAdcBar = T->Ndata_bb_hodoadc_bar_adc_id;
+    Int_t NdataTdcBar = T->Ndata_bb_hodotdc_bar_tdc_id;
+    Int_t NdataAdc = T->Ndata_bb_hodoadc_adcelemID;
+    Int_t NdataTdc = T->Ndata_bb_hodotdc_tdcelemID;
+    
+    Int_t ADCBar, TDCBar, adcid; 
+    Double_t ADCValL, ADCValR, TDCTotL, TDCTotR;
+    if (!DoBars){
+      for(Int_t adc=0; adc<NdataAdc; adc++){
+	ADCBar = (int) T->bb_hodoadc_adcelemID[adc];
+	if (ADCBar >= 0 && ADCBar < 32) ADCBar += adcbarstart;
+	else if (ADCBar >= 32 && ADCBar < 64) ADCBar += 90;
+	else {
+	  cout << "Bar value out of range 0-63, check offset value! " << ADCBar << endl;
+	  continue;
+	}
+	for(Int_t tdc=0; tdc<NdataTdc; tdc++){
+	  TDCBar = (int) T->bb_hodotdc_tdcelemID[tdc];
+	  if( ADCBar == TDCBar ){
+	    ADCBar = (int) T->bb_hodoadc_adcelemID[adc];
+	    if (ADCBar >= 0 && ADCBar < 32){
+	      ADCValL = T->bb_hodoadc_a_p[adc];
+	      TDCTotL = T->bb_hodotdc_tdc_tot[tdc];
+	      hTOTvADCL[ADCBar]->Fill(ADCValL,TDCTotL);
+	    }else if(ADCBar >= 32 && ADCBar < 64){
+	      ADCValR = T->bb_hodoadc_a_p[adc];
+	      TDCTotR = T->bb_hodotdc_tdc_tot[tdc];
+	      hTOTvADCR[ADCBar-adcbarstart]->Fill(ADCValR,TDCTotR);
+	    }
+	  }
+	}
+      }
+    }else if (DoBars){
+      // check for tdc hits in the bars that match the adc bars instrumented
+      for(Int_t adcbar=0; adcbar<NdataAdcBar; adcbar++){
+	Double_t dADCBar = T->bb_hodoadc_bar_adc_id[adcbar]; 
+	ADCBar = (int) T->bb_hodoadc_bar_adc_id[adcbar]; 
+	if (ADCBar - adcbarstart > 31) {
+	  cout << "Error: ADCBar = " << ADCBar << " is > 31. Before cast to Int_t, value is " << dADCBar << ". Skipping this event" << endl;
+	  continue;
+	}
+	for(Int_t tdcbar=0; tdcbar<NdataTdcBar; tdcbar++){
+	  TDCBar = T->bb_hodotdc_bar_tdc_id[tdcbar];
+	  if( ADCBar == TDCBar ){
+	    ADCValL = T->bb_hodoadc_bar_adc_L_ap[adcbar];
+	    ADCValR = T->bb_hodoadc_bar_adc_R_ap[adcbar];
+	    TDCTotL = T->bb_hodotdc_bar_tdc_L_tot[tdcbar];
+	    TDCTotR = T->bb_hodotdc_bar_tdc_R_tot[tdcbar];
+	  
+	    hTOTvADCL[adcbar-adcbarstart]->Fill(ADCValL,TDCTotL);
+	    hTOTvADCR[adcbar]->Fill(ADCValR,TDCTotR);
+	  }// if adc==tdc bar
+	}// tdc bar loop
+      }// adc bar loop
+    }else cout << "WTF?!" << endl;
     
     
   }// event loop
   
-
 
   //==================================================================== Fitting
   // FitSlicesY(f1,firstbin,lastbin,cut,option,arr)
@@ -209,7 +213,7 @@ void FitTOT(const TString InFile="bbhodo_307_500000",
     
     // text file for output
     ofstream tottextfile;
-    TString outtxtfiletot = ANALYSED_DIR + "/TOTFits_TOT_" + InFile + ".txt";
+    TString outtxtfiletot = ANALYSED_DIR + "/TOTFits_TOT_" + sRunNum + ".txt";
     tottextfile.open(outtxtfiletot);
     
     //===================== fit for y direction
@@ -445,10 +449,10 @@ void FitTOT(const TString InFile="bbhodo_307_500000",
 
 
   //========================================================== Close output file
-  f->Close();
+  //f->Close();
   // tidy up canvases
-  delete cLeft;
-  delete cRight;
+  //delete cLeft;
+  //delete cRight;
 
   
 
