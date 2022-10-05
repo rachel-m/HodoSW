@@ -14,6 +14,7 @@
 #include <TCanvas.h>
 #include <TLine.h>
 #include <TLegend.h>
+#include <TSpectrum.h>
 
 #include "SBSTree.C"
 
@@ -40,9 +41,10 @@ SBSTree *T;
 
 using namespace std;
 
-void GetLandau(const Int_t RunNum=14032, Int_t nevents=-1, bool DoBars=false,
-	       Double_t FitStart=0.0, Double_t FitStop = 80.0,
-	       Double_t Width=40.0, Int_t HistRange=1000){
+
+void GetLandau(const Int_t RunNum=14032, Double_t ADCcut=2.0, Int_t nevents=-1, bool DoBars=true,
+	       Int_t HistRange=1000.0){
+  //ADC Cut Values [700V,800V,900V,1000V] = [?,?,?,200]
   // RunNum is the run number to analyze
   // nevents is how many events to analyse, -1 for all
   // DoBars is to use generic detector variables or hodoscope class bar variables
@@ -72,7 +74,7 @@ void GetLandau(const Int_t RunNum=14032, Int_t nevents=-1, bool DoBars=false,
   }//setting tree
   
   
-  
+ 
   //========================================================= Check no of events
   Int_t Nev = C->GetEntries();
   cout << "N entries in tree is " << Nev << endl;
@@ -92,18 +94,8 @@ void GetLandau(const Int_t RunNum=14032, Int_t nevents=-1, bool DoBars=false,
   
   //==================================================== Create output root file
   // root file for viewing fits
-  TString outrootfile = ANALYSED_DIR + "/LandauFits_" + prefix + sRunNum + "_" + DoBars + ".root";
+  TString outrootfile = ANALYSED_DIR + "/ADCSpectra_" + prefix + sRunNum + "_" + DoBars + ".root";
   TFile *f = new TFile(outrootfile, "RECREATE");
-
-
-
-  //==================================================== Create output text file
-  // text file for recording fit results
-  ofstream landautextfile;
-  TString outtxtfile = ANALYSED_DIR + "/LandauFits_" + prefix + sRunNum + "_" + DoBars + ".txt";
-  landautextfile.open(outtxtfile);
-
-
 
   //===================================================== Histogram Declarations
   // number of adc bins
@@ -131,45 +123,12 @@ void GetLandau(const Int_t RunNum=14032, Int_t nevents=-1, bool DoBars=false,
 			     //NAdcBins, AdcBinLow, AdcBinHigh,
 			     NAdcBins, AdcBinLow, 400,
 			     nBars, 0.0+adcbarstart, nAdc+adcbarstart);
-			     
-  
-  TH1F *hADCConstantsL = new TH1F("hADCConstantsL",
-				  "Constants of landau fits",
-				  nBars,
-				  0.0,
-				  nBars);
-  TH1F *hADCConstantsR = new TH1F("hADCConstantsR",
-				  "Amplitudes of landau fits",
-				  nBars,
-				  0.0,
-				  nBars);
-  TH1F *hADCMPVsL = new TH1F("hADCMPVsL",
-			     "MPVs of landau fits",
-			     nBars,
-			     0.0,
-			     nBars);
-  TH1F *hADCMPVsR = new TH1F("hADCMPVsR",
-			     "MPVs of landau fits",
-			     nBars,
-			     0.0,
-			     nBars);
-  TH1F *hADCWidthsL = new TH1F("hADCWidthsL",
-			       "Widths of landau fits",
-			       nBars,
-			       0.0,
-			       nBars);
-  TH1F *hADCWidthsR = new TH1F("hADCWidthsR",
-			       "Widths of landau fits",
-			       nBars,
-			       0.0,
-			       nBars);
-  
-
+			    
 
   //================================================================= Event Loop
   for(Int_t event=0; event<NEventsAnalysis; event++){
     
-    C->GetEntry(event);
+    T->GetEntry(event);
     
     if (event % 100000 == 0) 
       cout << event << "/" << NEventsAnalysis << endl;
@@ -180,17 +139,38 @@ void GetLandau(const Int_t RunNum=14032, Int_t nevents=-1, bool DoBars=false,
       //cout << "Number of adc hits: " << NadcelemID << endl;
       for (Int_t i=0; i<NadcelemID; i++){
 	Int_t adcID = (int)T->bb_hodoadc_adcelemID[i];
-	Double_t a_p = T->bb_hodoadc_a_p[i]; //pedestal corrected integral	    
+	Double_t a_p = T->bb_hodoadc_a[i]; //no ped sub
+	//Double_t a_p = T->bb_hodoadc_a_p[i]; //pedestal corrected integral	    
 	//Double_t a_p = T->bb_hodoadc_a_amp_p[i]; //pedestal corrected amplitude
  
 	//cout for debugging
 	//cout << "id: " <<  adcID << " a_p: " << a_p << endl;
 	
-	if (adcID >= 0 && adcID < 32){ 
-	  hADCL[adcID]->Fill(a_p);
+	//LEFT LOOP
+	if (adcID >= 0 && adcID <= 31){
+	  if(adcID == 0 && T->bb_hodoadc_a[i+1]>ADCcut && T->bb_hodoadc_a[i+NadcelemID/2+1]>ADCcut){
+	    hADCL[adcID]->Fill(a_p);
+	  }
+	  else if(adcID == 31 && T->bb_hodoadc_a[i-1]>ADCcut && T->bb_hodoadc_a[i+NadcelemID/2-1]>ADCcut){
+	    hADCL[adcID]->Fill(a_p);
+	  }
+	  else if(T->bb_hodoadc_a[i+1]>ADCcut && T->bb_hodoadc_a[i-1]>ADCcut
+		  && T->bb_hodoadc_a[i+NadcelemID/2+1]>ADCcut && T->bb_hodoadc_a[i+NadcelemID/2-1]>ADCcut){
+	    hADCL[adcID]->Fill(a_p);
+	  }
 	  hBarVsADC->Fill(a_p,adcID+adcbarstart);
-	}else if (adcID >= 32 && adcID < 64){
-	  hADCR[adcID-adcbarstart]->Fill(a_p);
+	}
+	//RIGHT LOOP
+	else if (adcID >= 32 && adcID <= 63){
+	  if(adcID == 32 && T->bb_hodoadc_a[i+1]>ADCcut && T->bb_hodoadc_a[i-NadcelemID/2+1]>ADCcut){
+	    hADCR[adcID-32]->Fill(a_p);
+	  }
+	  else if(adcID == 63 && T->bb_hodoadc_a[i-1]>ADCcut && T->bb_hodoadc_a[i-NadcelemID/2-1]>ADCcut){
+	    hADCR[adcID-32]->Fill(a_p);
+	  }
+	  else if(T->bb_hodoadc_a[i+1]>ADCcut && T->bb_hodoadc_a[i-1]>ADCcut && T->bb_hodoadc_a[i-NadcelemID/2-1]>ADCcut && T->bb_hodoadc_a[i-NadcelemID/2+1]>ADCcut){
+	    hADCR[adcID-32]->Fill(a_p);
+	  }
 	  hBarVsADC->Fill(a_p,adcID+adcbarstart);
 	}
 	else{
@@ -199,10 +179,10 @@ void GetLandau(const Int_t RunNum=14032, Int_t nevents=-1, bool DoBars=false,
 	}
       }
     }else if (DoBars){
-      Int_t NadcbarID = (int)T->Ndata_bb_hodoadc_bar_adc_id;
+      Int_t NadcbarID = floor(T->Ndata_bb_hodoadc_bar_adc_id);
       for (Int_t i=0; i<NadcbarID; i++){
 	Double_t DadcbarID = T->bb_hodoadc_bar_adc_id[i];
-	Int_t adcbarID = (int)T->bb_hodoadc_bar_adc_id[i];
+	Int_t adcbarID = floor(T->bb_hodoadc_bar_adc_id[i]);
 	Double_t L_a_p = T->bb_hodoadc_bar_adc_L_ap[i];
 	Double_t R_a_p = T->bb_hodoadc_bar_adc_R_ap[i];
 	
@@ -221,221 +201,7 @@ void GetLandau(const Int_t RunNum=14032, Int_t nevents=-1, bool DoBars=false,
       }
     }
   }// event loop
-  
-
-  //exit(0);
-  //==================================================================== Fitting
-  //start fitting
-  TF1 *fLandauL[nBars];
-  TF1 *fLandauR[nBars];
-  
-  // some variables for storing fit results etc
-  Double_t LaundauConstL[nBars];
-  Double_t LaundauMPVL[nBars];
-  Double_t LaundauWidthL[nBars];
-  Double_t LaundauConstR[nBars];
-  Double_t LaundauMPVR[nBars];
-  Double_t LaundauWidthR[nBars];
-  Double_t LaundauConstErrorsL[nBars];
-  Double_t LaundauMPVErrorsL[nBars];
-  Double_t LaundauWidthErrorsL[nBars];
-  Double_t LaundauConstErrorsR[nBars];
-  Double_t LaundauMPVErrorsR[nBars];
-  Double_t LaundauWidthErrorsR[nBars];
-
-  // loop over all bars
-  for(Int_t bar=0; bar<(nBars); bar++){
-    Int_t b = adcbarstart+bar;
-
-    //get info on histogram to set initial pars    Int_t nBinsL = hADCL[bar]->GetNbinsX();
-    Int_t nBinsR = hADCR[bar]->GetNbinsX();
-    if(nBinsL!=nBinsR){
-      cout << "WARNING - check the hADCL and hADCR nbins matches" << endl;
-      exit;
-    }
-
-    // find landau max position  
-    hADCL[bar]->GetXaxis()->SetRangeUser(FitStart,FitStop);
-    hADCR[bar]->GetXaxis()->SetRangeUser(FitStart,FitStop);
-    Int_t maxbinL = hADCL[bar]->GetMaximumBin();
-    Int_t maxbincentreL = hADCL[bar]->GetBinCenter(maxbinL);
-    // Int_t maxbincontentL = hADCL[bar]->GetBinContent(maxbinL);
-    Int_t maxbinR = hADCR[bar]->GetMaximumBin();
-    Int_t maxbincentreR = hADCR[bar]->GetBinCenter(maxbinR);
-    // Int_t maxbincontentR = hADCR[bar]->GetBinContent(maxbinR);
-    hADCL[bar]->GetXaxis()->SetRangeUser(0.0,FitStop);
-    hADCR[bar]->GetXaxis()->SetRangeUser(0.0,FitStop);
-    
-    // left
-    fLandauL[bar] = new TF1(TString::Format("fLandau_Bar%d_L",b),
-			    "landau",FitStart, FitStop);
-    // fLandauL[bar]->SetParameter(0, binmaxcontentL);
-    fLandauL[bar]->SetParameter(1, maxbincentreL);
-    fLandauL[bar]->SetParameter(2, Width);
-    // right
-    fLandauR[bar] = new TF1(TString::Format("fLandau_Bar%d_R",b),
-			    "landau",FitStart, FitStop);
-    // fLandauR[bar]->SetParameter(0, binmaxcontentR);
-    fLandauR[bar]->SetParameter(1, maxbincentreR);
-    fLandauR[bar]->SetParameter(2, Width);
-    // do the fits
-    hADCL[bar]->Fit(fLandauL[bar],"QR");
-    hADCR[bar]->Fit(fLandauR[bar],"QR");
-    // copy fit results to arrays
-    LaundauConstL[bar] = fLandauL[bar]->GetParameter(0);
-    LaundauMPVL[bar] = fLandauL[bar]->GetParameter(1);
-    LaundauWidthL[bar] = fLandauL[bar]->GetParameter(2);
-    LaundauConstR[bar] = fLandauR[bar]->GetParameter(0);
-    LaundauMPVR[bar] = fLandauR[bar]->GetParameter(1);
-    LaundauWidthR[bar] = fLandauR[bar]->GetParameter(2);
-    LaundauConstErrorsL[bar] = fLandauL[bar]->GetParError(0);
-    LaundauMPVErrorsL[bar] = fLandauL[bar]->GetParError(1);
-    LaundauWidthErrorsL[bar] = fLandauL[bar]->GetParError(2);
-    LaundauConstErrorsR[bar] = fLandauR[bar]->GetParError(0);
-    LaundauMPVErrorsR[bar] = fLandauR[bar]->GetParError(1);
-    LaundauWidthErrorsR[bar] = fLandauR[bar]->GetParError(2);
-  }// bar loop
-
-  // // write to text file
-  for(Int_t bar=0; bar<nBars; bar++ ){
-    Int_t b = adcbarstart+bar;
-    landautextfile << b << "\t" << LaundauMPVL[bar]
-		   << "\t" << LaundauMPVErrorsL[bar]
-		   << "\t" << LaundauMPVR[bar]
-		   << "\t" << LaundauMPVErrorsR[bar] << "\n";
-    // fill the histograms for displaying
-    hADCConstantsL->Fill(bar, LaundauConstL[bar]);
-    hADCMPVsL->Fill(bar, LaundauMPVL[bar]);
-    hADCWidthsL->Fill(bar, LaundauWidthL[bar]);
-    hADCConstantsR->Fill(bar, LaundauConstL[bar]);
-    hADCMPVsR->Fill(bar, LaundauMPVL[bar]);
-    hADCWidthsR->Fill(bar, LaundauWidthL[bar]);
-  }
-  // close text file
-  landautextfile.close();
-
-
-
-  //========================================================== Graph Fit Results
-  Double_t xerrors[nBars];
-  Double_t bars[nBars];
-  for(Int_t bar=0; bar<(nBars); bar++){
-    Int_t b = adcbarstart+bar;
-    
-    xerrors[bar] = 0.0;
-    bars[bar] = b;
-  }
-  // landau constants
-  // left
- TGraphErrors *gConstantsL = new TGraphErrors(nBars,
-  					       bars,
-  					       LaundauConstL,
-  					       xerrors,
-  					       LaundauConstErrorsL);
-  gConstantsL->SetTitle("Landau Fit Constants");
-  gConstantsL->SetName("ConstantsL");
-  gConstantsL->GetXaxis()->SetTitle("Bar");
-  gConstantsL->GetYaxis()->SetTitle("constant of landau fit");
-  gConstantsL->SetMarkerColor(kGreen); gConstantsL->SetMarkerStyle(21);
-  // right
- TGraphErrors *gConstantsR = new TGraphErrors(nBars,
-  					       bars,
-  					       LaundauConstR,
-  					       xerrors,
-  					       LaundauConstErrorsR);
-  gConstantsR->SetTitle("Landau Fit Constants");
-  gConstantsR->SetName("ConstantsR");
-  gConstantsR->GetXaxis()->SetTitle("Bar");
-  gConstantsR->GetYaxis()->SetTitle("constant of landau fit");
-  gConstantsR->SetMarkerColor(kBlue); gConstantsR->SetMarkerStyle(21);
-  // landau mpvs
-  // left
-  TGraphErrors *gMPVL = new TGraphErrors(nBars,
-					 bars,
-					 LaundauConstL,
-					 xerrors,
-					 LaundauConstErrorsL);
-  gMPVL->SetTitle("Landau Fit MPV");
-  gMPVL->SetName("MPVL");
-  gMPVL->GetXaxis()->SetTitle("Bar");
-  gMPVL->GetYaxis()->SetTitle("mpv of landau fit");
-  gMPVL->SetMarkerColor(kGreen); gMPVL->SetMarkerStyle(21);
-  // right
-  TGraphErrors *gMPVR = new TGraphErrors(nBars,
-					 bars,
-					 LaundauConstR,
-					 xerrors,
-					 LaundauConstErrorsR);
-  gMPVR->SetTitle("Landau Fit MPV");
-  gMPVR->SetName("MPVR");
-  gMPVR->GetXaxis()->SetTitle("Bar");
-  gMPVR->GetYaxis()->SetTitle("mpv of landau fit");
-  gMPVR->SetMarkerColor(kBlue); gMPVR->SetMarkerStyle(21);
-  // landau widths
-  // left
-  TGraphErrors *gWidthL = new TGraphErrors(nBars,
-					 bars,
-					 LaundauConstL,
-					 xerrors,
-					 LaundauConstErrorsL);
-  gWidthL->SetTitle("Landau Fit Width");
-  gWidthL->SetName("WidthL");
-  gWidthL->GetXaxis()->SetTitle("Bar");
-  gWidthL->GetYaxis()->SetTitle("width of landau fit");
-  gWidthL->SetMarkerColor(kGreen); gWidthL->SetMarkerStyle(21);
-  // right
-  TGraphErrors *gWidthR = new TGraphErrors(nBars,
-					 bars,
-					 LaundauConstR,
-					 xerrors,
-					 LaundauConstErrorsR);
-  gWidthR->SetTitle("Landau Fit Width");
-  gWidthR->SetName("WidthR");
-  gWidthR->GetXaxis()->SetTitle("Bar");
-  gWidthR->GetYaxis()->SetTitle("width of landau fit");
-  gWidthR->SetMarkerColor(kBlue); gWidthR->SetMarkerStyle(21);
-  
-  // draw graphs
-  // constants
-  TCanvas *cConstants = new TCanvas();
-  cConstants->SetName("cConstantsLeftVRight");
-  cConstants->cd();
-  gConstantsL->Draw("AP");
-  gConstantsR->Draw("SAMEP");
-  TLegend *lConstants = new TLegend(0.1,0.1,0.3,0.3);
-  lConstants->SetHeader("pmt sides");
-  lConstants->AddEntry("ConstantsL","Left");
-  lConstants->AddEntry("ConstantsR","Right");
-  lConstants->Draw();
-  cConstants->Print("temp1.pdf");
-  
-  // MPVs
-  TCanvas *cMPV = new TCanvas();
-  cMPV->SetName("cMPVLeftVRight");
-  cMPV->cd();
-  gMPVL->Draw("AP");
-  gMPVR->Draw("SAMEP");
-  TLegend *lMPV = new TLegend(0.1,0.1,0.3,0.3);
-  lMPV->SetHeader("pmt sides");
-  lMPV->AddEntry("MPVL","Left");
-  lMPV->AddEntry("MPVR","Right");
-  lMPV->Draw();
-  cMPV->Print("temp2.pdf");
-  
-  // Widths
-  TCanvas *cWidth = new TCanvas();
-  cWidth->SetName("cWidthLeftVRight");
-  cWidth->cd();
-  gWidthL->Draw("AP");
-  gWidthR->Draw("SAMEP");
-  TLegend *lWidth = new TLegend(0.1,0.1,0.3,0.3);
-  lWidth->SetHeader("pmt sides");
-  lWidth->AddEntry("WidthL","Left");
-  lWidth->AddEntry("WidthR","Right");
-  lWidth->Draw();
-  cWidth->Print("temp3.pdf");
-  
- //========================================================== Draw Fit Results
+ 
   //Left Bars
   TCanvas *cLeft1 = new TCanvas("cLeft1",
   			       "Left PMTs, ADC spectra",
@@ -443,7 +209,7 @@ void GetLandau(const Int_t RunNum=14032, Int_t nevents=-1, bool DoBars=false,
   cLeft1->Divide(4,4);
   for(Int_t b=0; b<nBars/2; b++){
     cLeft1->cd(b+1);
-    //gPad->SetLogy();
+    gPad->SetLogy();
     hADCL[b]->Draw();
   }
   
@@ -453,7 +219,7 @@ void GetLandau(const Int_t RunNum=14032, Int_t nevents=-1, bool DoBars=false,
   cLeft2->Divide(4,4);
   for(Int_t b=(nBars/2); b<nBars; b++){
     cLeft2->cd(b+1-nBars/2);
-    //gPad->SetLogy();
+    gPad->SetLogy();
     hADCL[b]->Draw();
   }
   
@@ -465,7 +231,7 @@ void GetLandau(const Int_t RunNum=14032, Int_t nevents=-1, bool DoBars=false,
   cRight1->Divide(4,4);
   for(Int_t b=0; b<nBars/2; b++){
     cRight1->cd(b+1);
-    //gPad->SetLogy();
+    gPad->SetLogy();
     hADCR[b]->Draw();
   }
 
@@ -475,7 +241,7 @@ void GetLandau(const Int_t RunNum=14032, Int_t nevents=-1, bool DoBars=false,
   cRight2->Divide(4,4);
   for(Int_t b=nBars/2; b<nBars; b++){
     cRight2->cd(b+1-nBars/2);
-    //gPad->SetLogy();
+    gPad->SetLogy();
     hADCR[b]->Draw();
   }
 
@@ -505,6 +271,7 @@ void GetLandau(const Int_t RunNum=14032, Int_t nevents=-1, bool DoBars=false,
   c2D->Write();
   TCanvas *cadc = new TCanvas();
   cadc->cd();
+  hBarVsADC->Write();
   for(Int_t bar=0; bar<(nBars); bar++){
     hADCL[bar]->GetXaxis()->SetTitle("ADC bin");
     hADCL[bar]->Write();
@@ -512,57 +279,20 @@ void GetLandau(const Int_t RunNum=14032, Int_t nevents=-1, bool DoBars=false,
     hADCR[bar]->Write();
   }
   
-  f->cd();
-  gDirectory->mkdir("FitResults");
-  f->cd("FitResults");
-  // hists and graphs of results
-  hADCConstantsL->GetXaxis()->SetTitle("Bar");
-  hADCConstantsL->GetYaxis()->SetTitle("Landau fit constant");
-  hADCConstantsL->Write();
-  hADCConstantsR->GetXaxis()->SetTitle("Bar");
-  hADCConstantsR->GetYaxis()->SetTitle("Landau fit constant");
-  hADCConstantsR->Write();
-  hADCMPVsL->GetXaxis()->SetTitle("Bar");
-  hADCMPVsL->GetYaxis()->SetTitle("Landau fit MPV");
-  hADCMPVsL->Write();
-  hADCMPVsR->GetXaxis()->SetTitle("Bar");
-  hADCMPVsR->GetYaxis()->SetTitle("Landau fit MPV");
-  hADCMPVsR->Write();
-  hADCWidthsL->GetXaxis()->SetTitle("Bar");
-  hADCWidthsL->GetYaxis()->SetTitle("Landau fit Width");
-  hADCWidthsL->Write();
-  hADCWidthsR->GetXaxis()->SetTitle("Bar");
-  hADCWidthsR->GetYaxis()->SetTitle("Landau fit Width");
-  hADCWidthsR->Write();
-  // graphs of results - not for use with hall a online gui
-  cConstants->Write();
-  gConstantsL->Write();
-  gConstantsR->Write();
-  cMPV->Write();
-  gMPVL->Write();
-  gMPVR->Write();
-  cWidth->Write();
-  gWidthL->Write();
-  gWidthR->Write();
+ 
 
-  gSystem->Exec(Form("pdfunite temp*.pdf LandauPlots_%i_%d.pdf",RunNum,DoBars));
+  gSystem->Exec(Form("pdfunite temp*.pdf RawADC_%i.pdf",RunNum));
   gSystem->Exec("rm temp*.pdf");
-
+  
   //========================================================== Close output file
   //f->Close();
   // tidy up canvases
-  //delete cConstants;
-  //delete cMPV;
-  //delete cWidth;
-  //delete cadc;
-  //cLeft1->Close();
-  //cLeft2->Close();
-  //cRight1->Close();
-  //cRight2->Close();
-  //cConstants->Close();
-
+  cLeft1->Close();
+  cLeft2->Close();
+  cRight1->Close();
+  cRight2->Close();
+  c2D->Close();
   //================================================================== End Macro
-}// end macro
-
+}
 
 
