@@ -20,8 +20,11 @@ const Int_t nBarsTDC = 90;
 const Int_t nBarsADC = 32;
 const Double_t ADCCUT = 150.;//100.0;
 
-const TString REPLAYED_DIR = "/adaqfs/home/a-onl/sbs/Rootfiles";
-const TString ANALYSED_DIR = "/adaqfs/home/a-onl/sbs/Rootfiles/bbhodo_hist";
+//const TString REPLAYED_DIR = "/adaqfs/home/a-onl/sbs/Rootfiles";
+//const TString ANALYSED_DIR = "/adaqfs/home/a-onl/sbs/Rootfiles/bbhodo_hist";
+
+const TString REPLAYED_DIR = "/volatile/halla/sbs/gpenman/rootfiles";
+const TString ANALYSED_DIR = "/volatile/halla/sbs/gpenman/hodocalib";
 
 // for local analysis at uog (please leave in comments)
 //TString REPLAYED_DIR = "/w/work0/home/rachel/HallA/BB_Hodo/FallRun2021/Replayed";
@@ -51,8 +54,8 @@ TChain *T = 0;
 
 using namespace std;
 
-void FitTimeWalk(const TString InFile="bbhodo_306_1000000", Int_t nevents=-1,
-		       Int_t DoFit=0,
+void FitTimeWalk(const TString InFile="bbhodofull_2236", Int_t nevents=-1,
+		       Int_t DoFit=1,
 		       Int_t CutADC=0, Double_t Fitmin=-999., Double_t Fitmax=-999.){
   // InFile is the input file without absolute path and without .root suffix
   // nevents is how many events to analyse, -1 for all
@@ -68,43 +71,44 @@ void FitTimeWalk(const TString InFile="bbhodo_306_1000000", Int_t nevents=-1,
 
   //========================================================= Get data from tree
   if(!T) { 
-    TString sInFile = REPLAYED_DIR + "/" + InFile + ".root";
-    cout << "Adding " << sInFile << endl;
+    //TString sInFile = REPLAYED_DIR + "/" + InFile + ".root";
+    //cout << "Adding " << sInFile << endl;
     T = new TChain("T");
-    T->Add(sInFile);
+    //T->Add(REPLAYED_DIR + "/" + InFile + "*.root");
+    T->Add("/volatile/halla/sbs/gpenman/rootfiles/*.root");
     
     // disable all branches
     T->SetBranchStatus("*",0);
     // enable branches
     T->SetBranchStatus("bb.hodotdc.*",1);
-    T->SetBranchAddress("bb.hodotdc.tdcbarid",Thodo::TDCBar);
-    T->SetBranchAddress("bb.hodotdc.L.tot",Thodo::TDCTotL);
-    T->SetBranchAddress("bb.hodotdc.R.tot",Thodo::TDCTotR);
-    T->SetBranchAddress("bb.hodotdc.L.le",Thodo::TDCLeL);
-    T->SetBranchAddress("bb.hodotdc.R.le",Thodo::TDCLeR);
+    T->SetBranchAddress("bb.hodotdc.bar.tdc.id",Thodo::TDCBar);
+    T->SetBranchAddress("bb.hodotdc.bar.tdc.L.tot",Thodo::TDCTotL);
+    T->SetBranchAddress("bb.hodotdc.bar.tdc.R.tot",Thodo::TDCTotR);
+    T->SetBranchAddress("bb.hodotdc.bar.tdc.L.le",Thodo::TDCLeL);
+    T->SetBranchAddress("bb.hodotdc.bar.tdc.R.le",Thodo::TDCLeR);
     if(CutADC==1){
       T->SetBranchStatus("bb.hodoadc.*",1);
       T->SetBranchAddress("bb.hodoadc.adcbarid",Thodo::ADCBar);
       // T->SetBranchAddress("bb.hodoadc.L.ap",Thodo::ADCValL);
       // T->SetBranchAddress("bb.hodoadc.R.ap",Thodo::ADCValR);
-      T->SetBranchAddress("bb.hodoadc.L.a",Thodo::ADCValL);
-      T->SetBranchAddress("bb.hodoadc.R.a",Thodo::ADCValR);
+      T->SetBranchAddress("bb.hodoadc.bar.adc.L.a",Thodo::ADCValL);
+      T->SetBranchAddress("bb.hodoadc.bar.adc.R.a",Thodo::ADCValR);
       //  T->SetBranchAddress("bb.hodoadc.adcbaroff",Thodo::ADCBarOff);
     }
 
     // enable vector size branches
-    T->SetBranchAddress("Ndata.bb.hodotdc.tdcbarid",&Thodo::NdataTdcBar);
-    T->SetBranchAddress("Ndata.bb.hodotdc.L.tot",&Thodo::NdataTotL);
-    T->SetBranchAddress("Ndata.bb.hodotdc.R.tot",&Thodo::NdataTotR);   
-    T->SetBranchAddress("Ndata.bb.hodotdc.L.le",&Thodo::NdataLeL);
-    T->SetBranchAddress("Ndata.bb.hodotdc.R.le",&Thodo::NdataLeR);    
+    T->SetBranchAddress("Ndata.bb.hodotdc.bar.tdc.id",&Thodo::NdataTdcBar);
+    T->SetBranchAddress("Ndata.bb.hodotdc.bar.tdc.L.tot",&Thodo::NdataTotL);
+    T->SetBranchAddress("Ndata.bb.hodotdc.bar.tdc.R.tot",&Thodo::NdataTotR);   
+    T->SetBranchAddress("Ndata.bb.hodotdc.bar.tdc.L.le",&Thodo::NdataLeL);
+    T->SetBranchAddress("Ndata.bb.hodotdc.bar.tdc.R.le",&Thodo::NdataLeR);    
     if(CutADC==1){
       T->SetBranchStatus("Ndata.bb.hodoadc.*",1);
-      T->SetBranchAddress("Ndata.bb.hodoadc.adcbarid",&Thodo::NdataAdcBar);
-      // T->SetBranchAddress("Ndata.bb.hodoadc.L.ap",&Thodo::NdataAdcL);
-      // T->SetBranchAddress("Ndata.bb.hodoadc.R.ap",&Thodo::NdataAdcR);
-      T->SetBranchAddress("Ndata.bb.hodoadc.L.a",&Thodo::NdataAdcL);
-      T->SetBranchAddress("Ndata.bb.hodoadc.R.a",&Thodo::NdataAdcR);  
+      T->SetBranchAddress("Ndata.bb.hodoadc.bar.adc.id",&Thodo::NdataAdcBar);
+      // T->SetBranchAddress("Ndata.bb.hodoadc.bar.adc.L.ap",&Thodo::NdataAdcL);
+      // T->SetBranchAddress("Ndata.bb.hodoadc.bar.adc.R.ap",&Thodo::NdataAdcR);
+      T->SetBranchAddress("Ndata.bb.hodoadc.bar.adc.L.a",&Thodo::NdataAdcL);
+      T->SetBranchAddress("Ndata.bb.hodoadc.bar.adc.R.a",&Thodo::NdataAdcR);  
     }
   }//setting tree
   
@@ -130,18 +134,18 @@ void FitTimeWalk(const TString InFile="bbhodo_306_1000000", Int_t nevents=-1,
   //==================================================== Check the bar offset
   T->GetEntry(0);
   Int_t adcbarstart = (Int_t)Thodo::ADCBar[0];
-  cout << "adcbarstart " << adcbarstart << endl;
+  //cout << "adcbarstart " << adcbarstart << endl;
 
 
 
   //===================================================== Histogram Declarations
   // number of histo bins
-  Int_t NTotBins = 80;//200;
+  Int_t NTotBins = 100;//200;
   Double_t TotBinLow = 0.;
-  Double_t TotBinHigh = 40;//400.;
-  Int_t NLEBins = 120;
-  Double_t LEBinLow = -80.;//-800.0;//-100.;
-  Double_t LEBinHigh = 0.0;//100.;
+  Double_t TotBinHigh = 30;//400.;
+  Int_t NLEBins = 100;
+  Double_t LEBinLow = -25.0;//-800.0;//-100.;
+  Double_t LEBinHigh = 25.0;//100.;
 
   // TOT vs LE histos
   TH2F *hLeVTOTL[nBarsTDC];
@@ -330,6 +334,7 @@ void FitTimeWalk(const TString InFile="bbhodo_306_1000000", Int_t nevents=-1,
 	hLeVTOTL_2->SetMarkerSize(0.6);
 	
 	cleft->Write();
+	cleft->Print(Form("left_%d.pdf",tdcbar));
 	delete cleft;
 	delete fcheckL;
 	
@@ -423,12 +428,17 @@ void FitTimeWalk(const TString InFile="bbhodo_306_1000000", Int_t nevents=-1,
 	hLeVTOTR_2->SetMarkerSize(0.6);
 	
 	cright->Write();
+	cright->Print(Form("right_%d.pdf",tdcbar));
 	delete cright;
 	delete fcheckR;
 	
       }// if we have entries in the tot v le histo
     }// tdc bar loop
-
+    
+    gSystem->Exec("pdfunite left*.pdf LFits.pdf");
+    gSystem->Exec("pdfunite right*.pdf RFits.pdf");
+    gSystem->Exec("rm left*.pdf right*.pdf");
+    
     // write to text file
     ofstream textfile;
     TString outtxtfile = ANALYSED_DIR + "/LEFits_" + InFile + ".txt";

@@ -1,6 +1,6 @@
 # Sample cut definition file
-Block: RawDecode
 
+Block: RawDecode
 RawDecode_master        1
 
 Block: Decode
@@ -8,11 +8,13 @@ Block: Decode
 #GoodPhi                        abs(R.gold.ph)<0.05
 #GoodTheta              abs(R.gold.th)<0.1
 #InAcceptance           GoodPhi&&GoodTheta
-Decode_master   1
+Decode_master   	1
 
 Block: CoarseReconstruct
+CutPreShower	bb.ps.e>0.2
+GoodElectron	CutPreShower
+CoarseReconstruct_master GoodElectron
 
-
-CoarseReconstruct_master 1
-
+#Block Physics
+#Physis_master	GoodElectron
 
