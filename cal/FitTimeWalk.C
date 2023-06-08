@@ -14,140 +14,145 @@
 #include <TChain.h>
 #include <TCanvas.h>
 #include <TLegend.h>
+#include <TSystem.h>
+#include <TStyle.h>
 
 const Int_t nTdc = 180;
 const Int_t nBarsTDC = 90;
 const Int_t nBarsADC = 32;
 const Double_t ADCCUT = 150.;//100.0;
 
-//const TString REPLAYED_DIR = "/adaqfs/home/a-onl/sbs/Rootfiles";
-//const TString ANALYSED_DIR = "/adaqfs/home/a-onl/sbs/Rootfiles/bbhodo_hist";
-
-const TString REPLAYED_DIR = "/volatile/halla/sbs/gpenman/rootfiles";
-const TString ANALYSED_DIR = "/volatile/halla/sbs/gpenman/hodocalib";
-
-// for local analysis at uog (please leave in comments)
+//for local analysis at uog (please leave in comments)
 //TString REPLAYED_DIR = "/w/work0/home/rachel/HallA/BB_Hodo/FallRun2021/Replayed";
 //TString ANALYSED_DIR = "/w/work0/home/rachel/HallA/BB_Hodo/FallRun2021/Analysed";
 
-namespace Thodo {
-  Int_t NdataTdcBar;
-  Double_t TDCBar[nBarsTDC];
-  Int_t NdataTotL;
-  Double_t TDCTotL[nBarsTDC];
-  Int_t NdataTotR;
-  Double_t TDCTotR[nBarsTDC];
-  Int_t NdataLeL;
-  Double_t TDCLeL[nBarsTDC];
-  Int_t NdataLeR;
-  Double_t TDCLeR[nBarsTDC];
-  Int_t NdataAdcBar;
-  Double_t ADCBar[nBarsADC];
-  Int_t NdataAdcL;
-  Double_t ADCValL[nBarsADC];
-  Int_t NdataAdcR;
-  Double_t ADCValR[nBarsADC];
-  //  Int_t ADCBarOff[nBarsADC];
-};
-
-TChain *T = 0;
+TString REPLAYED_DIR = "/w/work5/home/garyp/sbs/rootfiles/GEn/";
+TString ANALYSED_DIR = "/w/work5/home/garyp/sbs/results/hodocalib/";
 
 using namespace std;
 
-void FitTimeWalk(const TString InFile="bbhodofull_2236", Int_t nevents=-1,
-		       Int_t DoFit=1,
-		       Int_t CutADC=0, Double_t Fitmin=-999., Double_t Fitmax=-999.){
-  // InFile is the input file without absolute path and without .root suffix
-  // nevents is how many events to analyse, -1 for all
-  // DoFit==1 means fit tot v le and write out txt file of results
-  // CutADC==1 will demand an ADC hit above a specified threshold (ADCCUT)
-  // Fitmin and Fitmax are start and end limits for linear fit to tot v le, leave them at -999.0 if you want the script to find these limits itself. This is the preferred option.
+void FitTimeWalk(const TString InFile="e1209016", Int_t nevents=-1, Int_t cosmic=0, Int_t DoFit=1, Int_t CutADC=0, Double_t Fitmin=7., Double_t Fitmax=25.)
+{
+  //InFile is the input file without absolute path and without .root suffix
+  //nevents is how many events to analyse, -1 for all
+  //DoFit==1 means fit tot v le and write out txt file of results
+  //CutADC==1 will demand an ADC hit above a specified threshold (ADCCUT)
+  //Fitmin and Fitmax are start and end limits for linear fit to tot v le, leave them at -999.0 if you want the script to find these limits itself. This is the preferred option.
 
-  // To execute
-  // root -l
-  // .L FitTimeWalk.C+
-  // FitTimeWalk("filename", -1, 1, 0, -999., -999.)
+  //To execute
+  //root -l
+  //.L FitTimeWalk.C+
+  //FitTimeWalk("filename", -1, 0, 1, 0, -999., -999.)
 
 
-  //========================================================= Get data from tree
-  if(!T) { 
-    //TString sInFile = REPLAYED_DIR + "/" + InFile + ".root";
-    //cout << "Adding " << sInFile << endl;
-    T = new TChain("T");
-    //T->Add(REPLAYED_DIR + "/" + InFile + "*.root");
-    T->Add("/volatile/halla/sbs/gpenman/rootfiles/*.root");
+  //Get data from tree
+  TString sInFile = REPLAYED_DIR + "/" + InFile + "*.root";
+  cout << "Adding " << sInFile << endl;
+  TChain *T = new TChain("T");
+  T->Add(sInFile);
     
-    // disable all branches
-    T->SetBranchStatus("*",0);
-    // enable branches
-    T->SetBranchStatus("bb.hodotdc.*",1);
-    T->SetBranchAddress("bb.hodotdc.bar.tdc.id",Thodo::TDCBar);
-    T->SetBranchAddress("bb.hodotdc.bar.tdc.L.tot",Thodo::TDCTotL);
-    T->SetBranchAddress("bb.hodotdc.bar.tdc.R.tot",Thodo::TDCTotR);
-    T->SetBranchAddress("bb.hodotdc.bar.tdc.L.le",Thodo::TDCLeL);
-    T->SetBranchAddress("bb.hodotdc.bar.tdc.R.le",Thodo::TDCLeR);
-    if(CutADC==1){
-      T->SetBranchStatus("bb.hodoadc.*",1);
-      T->SetBranchAddress("bb.hodoadc.adcbarid",Thodo::ADCBar);
-      // T->SetBranchAddress("bb.hodoadc.L.ap",Thodo::ADCValL);
-      // T->SetBranchAddress("bb.hodoadc.R.ap",Thodo::ADCValR);
-      T->SetBranchAddress("bb.hodoadc.bar.adc.L.a",Thodo::ADCValL);
-      T->SetBranchAddress("bb.hodoadc.bar.adc.R.a",Thodo::ADCValR);
-      //  T->SetBranchAddress("bb.hodoadc.adcbaroff",Thodo::ADCBarOff);
-    }
+  Int_t NdataTDC;
+  Double_t TDCBar[nBarsTDC];
+  Double_t TDCleL[nBarsTDC], TDCleR[nBarsTDC], TDCtotL[nBarsTDC], TDCtotR[nBarsTDC];
+  Int_t NdataADC;
+  Double_t ADCBar[nBarsADC], ADCValL[nBarsADC], ADCValR[nBarsADC];
+  //Int_t ADCBarOff[nBarsADC];
+     
+  Double_t tr_p[3], tr_n, ps_e;
+     
+  //disable all branches
+  T->SetBranchStatus("*",0);
+  //enable branches
+  T->SetBranchStatus("Ndata.bb.hodotdc.bar.tdc.id",1);
+  T->SetBranchStatus("bb.hodotdc.*",1);
+    
+  T->SetBranchAddress("Ndata.bb.hodotdc.bar.tdc.id",&NdataTDC);
+  T->SetBranchAddress("bb.hodotdc.bar.tdc.id",TDCBar);
+  T->SetBranchAddress("bb.hodotdc.bar.tdc.L.tot",TDCtotL);
+  T->SetBranchAddress("bb.hodotdc.bar.tdc.R.tot",TDCtotR);
+  T->SetBranchAddress("bb.hodotdc.bar.tdc.L.le",TDCleL);
+  T->SetBranchAddress("bb.hodotdc.bar.tdc.R.le",TDCleR);
+     
+  if(CutADC==1){
+    T->SetBranchStatus("Ndata.bb.hodoadc.bar.adc.id",1);
+    T->SetBranchStatus("bb.hodoadc.bar.adc.*",1);
+    T->SetBranchAddress("Ndata.bb.hodoadc.bar.adc.id",&NdataADC);
+    T->SetBranchAddress("bb.hodoadc.bar.adc.id",ADCBar);
+    T->SetBranchAddress("bb.hodoadc.bar.adc.L.ap",ADCValL);
+    T->SetBranchAddress("bb.hodoadc.bar.adc.R.ap",ADCValR);
+    //T->SetBranchAddress("bb.hodoadc.bar.adc.L.a",ADCValL);
+    //T->SetBranchAddress("bb.hodoadc.bar.adc.R.a",ADCValR);
+    //T->SetBranchAddress("bb.hodoadc.adcbaroff",ADCBarOff);
+    //T->SetBranchAddress("Ndata.bb.hodoadc.bar.adc.L.ap",&NdataADCL);
+    //T->SetBranchAddress("Ndata.bb.hodoadc.bar.adc.R.ap",&NdataADCR);
+    //T->SetBranchAddress("Ndata.bb.hodoadc.bar.adc.L.a",&NdataADCL);
+    //T->SetBranchAddress("Ndata.bb.hodoadc.bar.adc.R.a",&NdataADCR);  
+  }
 
-    // enable vector size branches
-    T->SetBranchAddress("Ndata.bb.hodotdc.bar.tdc.id",&Thodo::NdataTdcBar);
-    T->SetBranchAddress("Ndata.bb.hodotdc.bar.tdc.L.tot",&Thodo::NdataTotL);
-    T->SetBranchAddress("Ndata.bb.hodotdc.bar.tdc.R.tot",&Thodo::NdataTotR);   
-    T->SetBranchAddress("Ndata.bb.hodotdc.bar.tdc.L.le",&Thodo::NdataLeL);
-    T->SetBranchAddress("Ndata.bb.hodotdc.bar.tdc.R.le",&Thodo::NdataLeR);    
-    if(CutADC==1){
-      T->SetBranchStatus("Ndata.bb.hodoadc.*",1);
-      T->SetBranchAddress("Ndata.bb.hodoadc.bar.adc.id",&Thodo::NdataAdcBar);
-      // T->SetBranchAddress("Ndata.bb.hodoadc.bar.adc.L.ap",&Thodo::NdataAdcL);
-      // T->SetBranchAddress("Ndata.bb.hodoadc.bar.adc.R.ap",&Thodo::NdataAdcR);
-      T->SetBranchAddress("Ndata.bb.hodoadc.bar.adc.L.a",&Thodo::NdataAdcL);
-      T->SetBranchAddress("Ndata.bb.hodoadc.bar.adc.R.a",&Thodo::NdataAdcR);  
-    }
-  }//setting tree
+  if(!cosmic){
+    T->SetBranchStatus("bb.tr.p",1);
+    T->SetBranchStatus("bb.ps.e",1);
+    T->SetBranchStatus("bb.tr.n",1);
+      
+    T->SetBranchAddress("bb.tr.p",&tr_p);
+    T->SetBranchAddress("bb.tr.n",&tr_n);
+    T->SetBranchAddress("bb.ps.e",&ps_e);
+  }
   
   
-  
-  //========================================================= Check no of events
+  //Check no of events
   Int_t Nev = T->GetEntries();
-  cout << "N entries in tree is " << Nev << endl;
+  if (Nev==0)
+    cout << "Tree empty. Check Paths! Exiting!" << endl;
+  else
+    cout << "N entries in tree is " << Nev << endl;
+  
   Int_t NEventsAnalysis;
-  if(nevents==-1) NEventsAnalysis = Nev;
-  else NEventsAnalysis = nevents;
+  if(nevents==-1) 
+    NEventsAnalysis = Nev;
+  else 
+    NEventsAnalysis = nevents;
+  
   cout << "Running analysis for " << NEventsAnalysis << " events" << endl;
   
 
   
-  //==================================================== Create output root file
-  // root file for viewing fits
-  TString outrootfile = ANALYSED_DIR + "/LEFits_" + InFile + ".root";
+  //Create output root file for viewing fits
+  TString outrootfile = ANALYSED_DIR + "TWFits.root";
   TFile *f = new TFile(outrootfile, "RECREATE");
-
-
+  if (!f->IsOpen()){
+    cout << "Couldn't open output root file. Exiting";
+    exit(2);
+  }
   
-  //==================================================== Check the bar offset
+  //Create output text file for TW database parameters
+  ofstream textfile;
+  TString outtxtfile = ANALYSED_DIR + "TWFits.txt";
+  textfile.open(outtxtfile);
+  if (!textfile.is_open()){
+    cout << "Couldn't open output text file. Exiting";
+    exit(2);
+  }
+  
+  //Check the bar offset
+  Int_t adcbarstart=32;
+  if (CutADC==1){
   T->GetEntry(0);
-  Int_t adcbarstart = (Int_t)Thodo::ADCBar[0];
-  //cout << "adcbarstart " << adcbarstart << endl;
+  adcbarstart = (Int_t)ADCBar[0];
+  cout << "adcbarstart " << adcbarstart << endl;
+  }
 
 
-
-  //===================================================== Histogram Declarations
-  // number of histo bins
+  //Histogram Declarations
+  //number of histo bins
   Int_t NTotBins = 100;//200;
   Double_t TotBinLow = 0.;
   Double_t TotBinHigh = 30;//400.;
   Int_t NLEBins = 100;
-  Double_t LEBinLow = -25.0;//-800.0;//-100.;
-  Double_t LEBinHigh = 25.0;//100.;
+  Double_t LEBinLow = -20.0;//-800.0;//-100.;
+  Double_t LEBinHigh = 20.0;//100.;
 
-  // TOT vs LE histos
+  //TOT vs LE histos
   TH2F *hLeVTOTL[nBarsTDC];
   TH2F *hLeVTOTR[nBarsTDC];
   for(Int_t bar=0; bar<(nBarsTDC); bar++){
@@ -163,8 +168,8 @@ void FitTimeWalk(const TString InFile="bbhodofull_2236", Int_t nevents=-1,
 			     );
   }
 
-  // adc histos to check if cutting on adc
-  // number of adc bins
+  //adc histos to check if cutting on adc
+  //number of adc bins
   Int_t NAdcBins = 200;//4096;
   Double_t AdcBinLow = 0.;
   Double_t AdcBinHigh = 2000;//4095.;
@@ -182,51 +187,67 @@ void FitTimeWalk(const TString InFile="bbhodofull_2236", Int_t nevents=-1,
 
 
 
-  //================================================================= Event Loop
-  // variables outside event loop
-  Int_t EventCounter = 0;
-
-  // event loop start
-  for(Int_t event=0; event<NEventsAnalysis; event++){
+  //Event Loop
+  for(Int_t ev=0; ev<NEventsAnalysis; ev++){
     
-    T->GetEntry(event);
-    // cout << "event " << event << endl;
-    EventCounter++;
-    if (EventCounter % 100000 == 0) cout <<
-				      EventCounter << "/" <<
-				      NEventsAnalysis << endl;
-    for(Int_t tdc=0; tdc<(Int_t)Thodo::NdataTdcBar; tdc++){
-      Int_t tdcbar = Thodo::TDCBar[tdc];
+    if(ev%10000==0) cout << ev << " / " << NEventsAnalysis << endl;
+    T->GetEntry(ev);
+    
+
+    //very loose elastic electron cut if not cosmic run
+    if (!cosmic){
+      if(tr_n <= 0) continue;
+      if(ps_e < 0.2) continue;
+      if(tr_p[0] < 2.0) continue;
+    }
+    
+    for(Int_t tdc=0; tdc<NdataTDC; tdc++){
+      Int_t tdcbar = TDCBar[tdc];
+      
+      //check for good cosmic bar i.e one neighbouring hit
+      if(cosmic){
+	if( tdc==0 ){
+	  if( TDCBar[tdc+1] != tdcbar+1 )
+	    continue;
+	}
+	else if( tdc==(Int_t)NdataTDC-1 ){
+	  if( TDCBar[tdc-1] != tdcbar-1 )
+	    continue;
+	}
+	else{ 
+	  if( TDCBar[tdc+1] != tdcbar+1 || TDCBar[tdc-1] != tdcbar-1 )
+	    continue;
+	}
+      }
+      
       if(CutADC==1){
 	for(Int_t adcbar=0; adcbar<nBarsADC; adcbar++){
-	  Int_t bar = Thodo::ADCBar[adcbar];//adcbarstart+adcbar;
+	  Int_t bar = ADCBar[adcbar];//adcbarstart+adcbar;
 	  if(bar==tdcbar){
-	    if(Thodo::ADCValL[adcbar]>=ADCCUT){
-	      hLeVTOTL[tdcbar]->Fill(Thodo::TDCTotL[tdc],Thodo::TDCLeL[tdc]);
-	      hADCL[adcbar]->Fill(Thodo::ADCValL[adcbar]);
+	    if(ADCValL[adcbar]>=ADCCUT){
+	      hLeVTOTL[tdcbar]->Fill(TDCtotL[tdc],TDCleL[tdc]);
+	      hADCL[adcbar]->Fill(ADCValL[adcbar]);
 	    }
-	    if(Thodo::ADCValR[adcbar]>=ADCCUT){
-	      hLeVTOTR[tdcbar]->Fill(Thodo::TDCTotR[tdc],Thodo::TDCLeR[tdc]);
-	      hADCR[adcbar]->Fill(Thodo::ADCValR[adcbar]);
+	    if(ADCValR[adcbar]>=ADCCUT){
+	      hLeVTOTR[tdcbar]->Fill(TDCtotR[tdc],TDCleR[tdc]);
+	      hADCR[adcbar]->Fill(ADCValR[adcbar]);
 	    }
 	  }//if bar matches
 	}//adc bar loop
-      }// adc cut
+      }//adc cut
       else if(CutADC!=1){
-	hLeVTOTL[tdcbar]->Fill(Thodo::TDCTotL[tdc],Thodo::TDCLeL[tdc]);
-	hLeVTOTR[tdcbar]->Fill(Thodo::TDCTotR[tdc],Thodo::TDCLeR[tdc]);
+	hLeVTOTL[tdcbar]->Fill(TDCtotL[tdc],TDCleL[tdc]);
+	hLeVTOTR[tdcbar]->Fill(TDCtotR[tdc],TDCleR[tdc]);
       }//else
-    }// tdc bar loop
-    
-    
-  }// event loop
+    }//tdc bar loop
+  }//event loop
 
 
 
-  //==================================================================== Fitting
+  //Fitting
   if(DoFit==1){
     
-    // parameters outside loop below
+    //parameters outside loop below
     f->cd();
     f->mkdir("Fits");
     f->cd("Fits");
@@ -245,7 +266,7 @@ void FitTimeWalk(const TString InFile="bbhodofull_2236", Int_t nevents=-1,
       if(hLeVTOTL[tdcbar]->GetEntries()==0)
       	continue;
       else{
-	// set up canvas for left pmt
+	//set up canvas for left pmt
 	TCanvas *cleft = new TCanvas(TString::Format("cFits_Bar%d_L",tdcbar),
 				     TString::Format("cFits_Bar%d_L",tdcbar),
 				     700, 500);
@@ -255,14 +276,14 @@ void FitTimeWalk(const TString InFile="bbhodofull_2236", Int_t nevents=-1,
 	leftPad->cd(1);
 	gPad->SetTopMargin(0.12);
 	hLeVTOTL[tdcbar]->Draw("COLZ");
-	// do the fit slices y
+	//do the fit slices y
 	hLeVTOTL[tdcbar]->FitSlicesY(0,1,NTotBins-1,StatCut);
-	// draw results
-	// constant of each slice gauss
+	//draw results
+	//constant of each slice gauss
 	leftPad->cd(2);
 	TH1D *hLeVTOTL_0 = (TH1D*)gDirectory->Get(TString::Format("hLeVTOT_Bar%d_L_%d",tdcbar,0));
 	hLeVTOTL_0->Draw();
-	// mean of each slice gauss
+	//mean of each slice gauss
 	TPad *rightPad = (TPad*)cleft->cd(2);
 	rightPad->Divide(1,2);
 	rightPad->cd(1);
@@ -270,7 +291,7 @@ void FitTimeWalk(const TString InFile="bbhodofull_2236", Int_t nevents=-1,
 	gPad->SetLeftMargin(0.15);
 	TH1D *hLeVTOTL_1 = (TH1D*)gDirectory->Get(TString::Format("hLeVTOT_Bar%d_L_%d",tdcbar,1));
 	hLeVTOTL_1->Draw();
-	// fit the means - this callibrates the tot
+	//fit the means - this callibrates the tot
 	Double_t minFitRange = 0.0;
 	Double_t maxFitRange = 0.0;
 	if(Fitmin==-999.0 || Fitmax==-999.0){
@@ -297,29 +318,29 @@ void FitTimeWalk(const TString InFile="bbhodofull_2236", Int_t nevents=-1,
 	fLeft[tdcbar] = new TF1(TString::Format("f_Bar%d_L",tdcbar),
 				"[0]*x + [1]",
 				minFitRange, maxFitRange);
-	// fLeft[tdcbar] = new TF1(TString::Format("f_Bar%d_L",tdcbar),
-      	// 		      "[0]*x + [1]*x*x + [2]",
-      	// 		      minFitRange, maxFitRange);
+	//fLeft[tdcbar] = new TF1(TString::Format("f_Bar%d_L",tdcbar),
+      	//		      "[0]*x + [1]*x*x + [2]",
+      	//		      minFitRange, maxFitRange);
 	hLeVTOTL_1->Fit(TString::Format("f_Bar%d_L",tdcbar),"QR","",minFitRange, maxFitRange);
 	par0L[tdcbar] = fLeft[tdcbar]->GetParameter(0);
 	par1L[tdcbar] = fLeft[tdcbar]->GetParameter(1);
-	// draw the fit to check
+	//draw the fit to check
 	TF1 *fcheckL = new TF1("fcheckL","[0]*x + [1]",minFitRange,maxFitRange);
 	fcheckL->SetParameter(0,fLeft[tdcbar]->GetParameter(0));
 	fcheckL->SetParameter(1,fLeft[tdcbar]->GetParameter(1));
-	// TF1 *fcheckL = new TF1("fcheckL","[0]*x + [1]*x*x + [2]",minFitRange,maxFitRange);
-	// fcheckL->SetParameter(0,fLeft[tdcbar]->GetParameter(0));
-	// fcheckL->SetParameter(1,fLeft[tdcbar]->GetParameter(1));
-	// fcheckL->SetParameter(2,fLeft[tdcbar]->GetParameter(2));
+	//TF1 *fcheckL = new TF1("fcheckL","[0]*x + [1]*x*x + [2]",minFitRange,maxFitRange);
+	//fcheckL->SetParameter(0,fLeft[tdcbar]->GetParameter(0));
+	//fcheckL->SetParameter(1,fLeft[tdcbar]->GetParameter(1));
+	//fcheckL->SetParameter(2,fLeft[tdcbar]->GetParameter(2));
 	leftPad->cd(1);
 	fcheckL->Draw("SAME");
-	// sigma of each slice gauss
+	//sigma of each slice gauss
 	rightPad->cd(2);
 	gPad->SetTopMargin(0.12);
 	gPad->SetLeftMargin(0.15);
 	TH1D *hLeVTOTL_2 = (TH1D*)gDirectory->Get(TString::Format("hLeVTOT_Bar%d_L_%d",tdcbar,2));
 	hLeVTOTL_2->Draw();
-	// set attributes
+	//set attributes
 	hLeVTOTL_0->SetLineColor(1);
 	hLeVTOTL_0->SetMarkerColor(1);
 	hLeVTOTL_0->SetMarkerStyle(21);
@@ -328,6 +349,8 @@ void FitTimeWalk(const TString InFile="bbhodofull_2236", Int_t nevents=-1,
 	hLeVTOTL_1->SetMarkerColor(1);
 	hLeVTOTL_1->SetMarkerStyle(21);
 	hLeVTOTL_1->SetMarkerSize(0.6);
+	hLeVTOTL_1->SetMinimum(LEBinLow);
+	hLeVTOTL_1->SetMaximum(LEBinHigh);
 	hLeVTOTL_2->SetLineColor(1);
 	hLeVTOTL_2->SetMarkerColor(1);
 	hLeVTOTL_2->SetMarkerStyle(21);
@@ -338,7 +361,7 @@ void FitTimeWalk(const TString InFile="bbhodofull_2236", Int_t nevents=-1,
 	delete cleft;
 	delete fcheckL;
 	
-	// set up canvas for right pmt
+	//set up canvas for right pmt
 	TCanvas *cright = new TCanvas(TString::Format("cFits_Bar%d_R",tdcbar),
 				      TString::Format("cFits_Bar%d_R",tdcbar),
 				      700, 500);
@@ -348,14 +371,14 @@ void FitTimeWalk(const TString InFile="bbhodofull_2236", Int_t nevents=-1,
 	leftPadr->cd(1);
 	gPad->SetTopMargin(0.12);
 	hLeVTOTR[tdcbar]->Draw("COLZ");
-	// do the fit slices y
+	//do the fit slices y
 	hLeVTOTR[tdcbar]->FitSlicesY(0,1,NTotBins-1,StatCut);
-	// draw results
-	// constant of each slice gauss
+	//draw results
+	//constant of each slice gauss
 	leftPadr->cd(2);
 	TH1D *hLeVTOTR_0 = (TH1D*)gDirectory->Get(TString::Format("hLeVTOT_Bar%d_R_%d",tdcbar,0));
 	hLeVTOTR_0->Draw();
-	// mean of each slice gauss
+	//mean of each slice gauss
 	TPad *rightPadr = (TPad*)cright->cd(2);
 	rightPadr->Divide(1,2);
 	rightPadr->cd(1);
@@ -363,7 +386,7 @@ void FitTimeWalk(const TString InFile="bbhodofull_2236", Int_t nevents=-1,
 	gPad->SetLeftMargin(0.15);
 	TH1D *hLeVTOTR_1 = (TH1D*)gDirectory->Get(TString::Format("hLeVTOT_Bar%d_R_%d",tdcbar,1));
 	hLeVTOTR_1->Draw();
-	// fit the means - this callibrates the tot
+	//fit the means - this callibrates the tot
 	Double_t minFitRanger = 0.0;
 	Double_t maxFitRanger = 0.0;
 	if(Fitmin==-999.0 || Fitmax==-999.0){
@@ -391,29 +414,29 @@ void FitTimeWalk(const TString InFile="bbhodofull_2236", Int_t nevents=-1,
 	fRight[tdcbar] = new TF1(TString::Format("f_Bar%d_R",tdcbar),
 				 "[0]*x + [1]",
 				 minFitRanger, maxFitRanger);
-	// fRight[tdcbar] = new TF1(TString::Format("f_Bar%d_R",tdcbar),
-	// 			      "[0]*x + [1]*x*x + [2]",
-	// 			      minFitRanger, maxFitRanger);
+	//fRight[tdcbar] = new TF1(TString::Format("f_Bar%d_R",tdcbar),
+	//			      "[0]*x + [1]*x*x + [2]",
+	//			      minFitRanger, maxFitRanger);
 	hLeVTOTR_1->Fit(TString::Format("f_Bar%d_R",tdcbar),"QR","",minFitRanger, maxFitRanger);
 	par0R[tdcbar] = fRight[tdcbar]->GetParameter(0);
 	par1R[tdcbar] = fRight[tdcbar]->GetParameter(1);
-	// draw the fit to check
+	//draw the fit to check
 	TF1 *fcheckR = new TF1("fcheckR","[0]*x + [1]",minFitRanger,maxFitRanger);
 	fcheckR->SetParameter(0,fRight[tdcbar]->GetParameter(0));
 	fcheckR->SetParameter(1,fRight[tdcbar]->GetParameter(1));
-	// TF1 *fcheckR = new TF1("fcheckR","[0]*x + [1]*x*x + [2]",minFitRange,maxFitRange);
-	// fcheckR->SetParameter(0,fRight[tdcbar]->GetParameter(0));
-	// fcheckR->SetParameter(1,fRight[tdcbar]->GetParameter(1));
-	// fcheckR->SetParameter(2,fRight[tdcbar]->GetParameter(2));
+	//TF1 *fcheckR = new TF1("fcheckR","[0]*x + [1]*x*x + [2]",minFitRange,maxFitRange);
+	//fcheckR->SetParameter(0,fRight[tdcbar]->GetParameter(0));
+	//fcheckR->SetParameter(1,fRight[tdcbar]->GetParameter(1));
+	//fcheckR->SetParameter(2,fRight[tdcbar]->GetParameter(2));
 	leftPadr->cd(1);
 	fcheckR->Draw("SAME");
-	// sigma of each slice gauss
+	//sigma of each slice gauss
 	rightPadr->cd(2);
 	gPad->SetTopMargin(0.12);
 	gPad->SetLeftMargin(0.15);
 	TH1D *hLeVTOTR_2 = (TH1D*)gDirectory->Get(TString::Format("hLeVTOT_Bar%d_R_%d",tdcbar,2));
 	hLeVTOTR_2->Draw();
-	// set attributes
+	//set attributes
 	hLeVTOTR_0->SetLineColor(1);
 	hLeVTOTR_0->SetMarkerColor(1);
 	hLeVTOTR_0->SetMarkerStyle(21);
@@ -422,6 +445,8 @@ void FitTimeWalk(const TString InFile="bbhodofull_2236", Int_t nevents=-1,
 	hLeVTOTR_1->SetMarkerColor(1);
 	hLeVTOTR_1->SetMarkerStyle(21);
 	hLeVTOTR_1->SetMarkerSize(0.6);
+	hLeVTOTR_1->SetMinimum(LEBinLow);
+	hLeVTOTR_1->SetMaximum(LEBinHigh);
 	hLeVTOTR_2->SetLineColor(1);
 	hLeVTOTR_2->SetMarkerColor(1);
 	hLeVTOTR_2->SetMarkerStyle(21);
@@ -432,17 +457,14 @@ void FitTimeWalk(const TString InFile="bbhodofull_2236", Int_t nevents=-1,
 	delete cright;
 	delete fcheckR;
 	
-      }// if we have entries in the tot v le histo
-    }// tdc bar loop
+      }//if we have entries in the tot v le histo
+    }//tdc bar loop
     
-    gSystem->Exec("pdfunite left*.pdf LFits.pdf");
-    gSystem->Exec("pdfunite right*.pdf RFits.pdf");
+    gSystem->Exec("pdfunite left*.pdf right*.pdf TWFits.pdf");
     gSystem->Exec("rm left*.pdf right*.pdf");
+    gSystem->Exec(Form("mv TWFits.pdf %s",ANALYSED_DIR.Data()));
     
-    // write to text file
-    ofstream textfile;
-    TString outtxtfile = ANALYSED_DIR + "/LEFits_" + InFile + ".txt";
-    textfile.open(outtxtfile);
+    //write to text file
     textfile << "bb.hodotdc.timewalk0map = " << "\n";
     for(Int_t tdcbarL=0; tdcbarL<nBarsTDC; tdcbarL++){
       textfile << par0L[tdcbarL] << "\t\n";
@@ -459,11 +481,11 @@ void FitTimeWalk(const TString InFile="bbhodofull_2236", Int_t nevents=-1,
    }
     textfile.close();
 
-  }// if DoFit==1
+  }//if DoFit==1
 
+  
 
-
- //=========================================================== Draw any canvases
+ //Draw any canvases
   TCanvas *cLeft1 = new TCanvas("cLeft1","Left PMTs 0-44",900,700);
   cLeft1->Divide(10,5);
   TCanvas *cLeft2 = new TCanvas("cLeft2","Left PMTs 45-90",900,700);
@@ -493,16 +515,16 @@ void FitTimeWalk(const TString InFile="bbhodofull_2236", Int_t nevents=-1,
     }
   }
  
-  //=============================================== Write/Draw Histograms/Graphs
+  //Write/Draw Histograms/Graphs
   f->cd();
   f->mkdir("RawDist");
   f->cd("RawDist");
-  // multiplot canvases
+  //multiplot canvases
   cLeft1->Write();
   cLeft2->Write();
   cRight1->Write();
   cRight2->Write();
-  // individual plots
+  //individual plots
   for(Int_t bar=0; bar<nBarsTDC; bar++){
     hLeVTOTL[bar]->GetYaxis()->SetTitle("LE Time");
     hLeVTOTL[bar]->GetXaxis()->SetTitle("TOT");
@@ -520,15 +542,14 @@ void FitTimeWalk(const TString InFile="bbhodofull_2236", Int_t nevents=-1,
     }
   }
 
-  //========================================================== Close output file
+  //Close output file
   f->Close();
-  // tidy up canvases
+  //tidy up canvases
   delete cLeft1;
   delete cLeft2;
   delete cRight1;
   delete cRight2;
 
   
-
-  //================================================================== End Macro
-}// end main
+  //cout << "Getting here before seg fault?" << endl;
+}//end main
