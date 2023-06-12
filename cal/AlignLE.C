@@ -26,7 +26,7 @@ const Double_t ADCCUT = 150.;//100.0;
 //TString REPLAYED_DIR = "/w/work0/home/rachel/HallA/BB_Hodo/FallRun2021/Replayed";
 //TString ANALYSED_DIR = "/w/work0/home/rachel/HallA/BB_Hodo/FallRun2021/Analysed";
 
-TString REPLAYED_DIR = "/w/work5/home/garyp/sbs/rootfiles/GEn/hodocalib/defaultcalib";
+TString REPLAYED_DIR = "/w/work5/home/garyp/sbs/rootfiles/GEn/hodocalib/TWcalib3_defaultoffset/";
 TString ANALYSED_DIR = "/w/work5/home/garyp/sbs/results/hodocalib/";
 
 using namespace std;
@@ -37,14 +37,13 @@ double TimeWalk(double time, double tot, double par0, double par1)
   return tcorr;
 }
 
-void AlignLE(const TString InFile="e1209016", Int_t nevents=-1, Int_t cosmic=0, Int_t DoFit=1, Int_t CutADC=0, Double_t Fitmin=7., Double_t Fitmax=25.)
+void AlignLE(const TString InFile="e1209016", Int_t nevents=-1, Int_t cosmic=0, Int_t DoFit=1, Int_t CutADC=0, Double_t Fitmin=-5., Double_t Fitmax=5.)
 {
   //InFile is the input file without absolute path and without .root suffix
   //nevents is how many events to analyse, -1 for all
   //DoFit==1 means fit tot v le and write out txt file of results
   //CutADC==1 will demand an ADC hit above a specified threshold (ADCCUT)
-  //Fitmin and Fitmax are start and end limits for linear fit to tot v le, leave them at -999.0 if you want the script to find these limits itself. This is the preferred option.
-
+  
   //To execute
   //root -l
   //.L AlignLE.C+
@@ -231,7 +230,7 @@ void AlignLE(const TString InFile="e1209016", Int_t nevents=-1, Int_t cosmic=0, 
   TCanvas *cl = new TCanvas();
   TCanvas *cr = new TCanvas();
    
-  TF1 *gausfit = new TF1("gausfit","gaus",-7.5,7.5);
+  TF1 *gausfit = new TF1("gausfit","gaus",LEBinLow,LEBinHigh);
    
   double loff[nBarsTDC];
   double roff[nBarsTDC];
@@ -254,7 +253,7 @@ void AlignLE(const TString InFile="e1209016", Int_t nevents=-1, Int_t cosmic=0, 
       cl->cd(j+1);
       hLleW[bar]->SetLineColor(kBlack);
       hLleW[bar]->GetXaxis()->SetTitle("Leading Edge [ns]");
-      hLleW[bar]->Fit(gausfit,"Q");
+      hLleW[bar]->Fit(gausfit,"Q","",Fitmin,Fitmax);
       loff[bar] = gausfit->GetParameter(1);
       hLleW[bar]->Draw("");
        
@@ -262,7 +261,7 @@ void AlignLE(const TString InFile="e1209016", Int_t nevents=-1, Int_t cosmic=0, 
       cr->cd(j+1);
       hRleW[bar]->SetLineColor(kBlack);
       hRleW[bar]->GetXaxis()->SetTitle("Leading Edge [ns]");
-      hRleW[bar]->Fit(gausfit,"Q");
+      hRleW[bar]->Fit(gausfit,"Q","",Fitmin,Fitmax);
       roff[bar] = gausfit->GetParameter(1);
       hRleW[bar]->Draw("");
     }
