@@ -39,7 +39,7 @@ void replay_BBHodoRaw(int run_number = 10746, uint nev = 50000, uint firstseg = 
   // This often requires a bit of coding to search directories, test
   // for non-existent files, etc.
   // Create file name patterns.
-  string firstname = /*"bbhodo_%d"*/ "e1209016__%d";
+  string firstname = /*"bbhodo_%d"*/ "e1209016_%d";
   string endname = Form(".evio.%d",nseg);
   string combined(string(firstname)+endname);
   const char* RunFileNamePattern = combined.c_str();
