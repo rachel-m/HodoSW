@@ -39,53 +39,60 @@ const Bool_t   PlotBBCal  = true;
 const Bool_t   PlotHCal   = true;
 const Bool_t   PlotKine   = true;
 const Bool_t   PlotOptics = true;
-
+const Bool_t   PlotDiff   = true;
 
 void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TString Target = "H2"){
   // Exp  = GEN or GMN
   //kin_no = 1,2,4,5 for GEN, 4,7,8,9,11,14 for GMN
   //Target = H2 for 10bar H2 reference cell data
   //Target = He3 for 10bar polarised He3 production cell data.
-  //Target = LD2 or LH2 for GMN (no hard coded stuff r.e. this yet)
+  //Target = LD2 or LH2 for GMN (not hard coded stuff r.e. this yet)
   
   //stopwatch for benchmarking analysis time on large dataset
   TStopwatch t;
   t.Start();
   
-
-  //This just sets paths for different files at jlab. Below there is similar strings which set paths at glasgow. Comment / change as necessary for your file locations.
-  TString Base_Dir = "/volatile/halla/sbs/gpenman/Rootfiles/GEn/";
-  Base_Dir = "/volatile/halla/sbs/jeffas/GEN_root/Rootfiles/";
-  //Base_Dir = "/w/work5/home/garyp/sbs/rootfiles/GEn/";
-  TString Pass_Dir = Form("GEN%i/",kin_no);
-  TString Rootfile_Dir;
+  //SET ROOTFILE DIRECTORY
+  TString Rootfile_Dir, Base_Dir, Pass_Dir;
+  //Base_Dir = Form("/volatile/halla/sbs/gpenman/rootfiles/%s",Exp.Data()); //general path for gen/gmn files
+  //Pass_Dir = Form("%s/%s%d",Exp.Data(),Exp.Data(),kin_no); //general path for production files
   
-  if (Target == "H2"){
-    cout << "Target is H2 Reference Cell" << endl;
-    Rootfile_Dir = Base_Dir + Pass_Dir + "H2";
+  
+  //SET ROOTFILE DIRECTORY AT GLASGOW FOR HODOCALIB STUFF
+  Base_Dir = "/w/work5/home/garyp/sbs/rootfiles/GEn/hodocalib/"; //hodocalib path at glasgow
+  //Pass_Dir = "uncalib/"; //raw hodo calib files
+  //Pass_Dir = "TWcalib/"; //timewalk calibrated hodo files
+  Pass_Dir = "GEMcalib/"; //timewalk + gem track calibrated hodo fifles
+  Rootfile_Dir = Base_Dir + Pass_Dir;
+  //////////////////////////////////
+  
+
+  if (Exp == "GEN"){
+    if (Target == "H2"){
+      cout << "Target is H2 Reference Cell" << endl;
+      //Rootfile_Dir = Base_Dir + Pass_Dir + "H2";
+    }
+    else if (Target == "He3"){
+      cout << "Target is He3 Production Cell" << endl;
+      //Rootfile_Dir = Base_Dir + Pass_Dir + "He3";
+    }
   }
-  else if (Target == "He3"){
-    cout << "Target is He3 Production Cell" << endl;
-    Rootfile_Dir = Base_Dir + Pass_Dir + "He3";
+  else if (Exp == "GMN"){
+    if (Target == "LH2"){
+      cout << "Target is LH2 Cryo" << endl;
+      //Rootfile_Dir = Base_Dir + Pass_Dir + "LH2";
+    }
+    else if (Target == "LD2"){
+      cout << "Target is LD2 Cryo" << endl;
+      //Rootfile_Dir = Base_Dir + Pass_Dir + "LD2";
+    }
   }
   else{
     cout << "Target doesn't make sense. Try harder." << endl;
     exit(1);
   }
-   
-  gSystem->Setenv("ROOTFILE_DIR",Rootfile_Dir);
-  ///////////
-
-  //SET ROOTFILE DIR IF USING AT GLASGOW
-  TString work_dir;
-  if (Target == "He3")
-    work_dir = "/w/work5/home/garyp/sbs/rootfiles/GEn/50K/";
-  else if (Target == "H2")
-    //work_dir = "/w/work5/home/garyp/sbs/rootfiles/GEn/hodocalib/uncalib";
-    //work_dir = "/w/work5/home/garyp/sbs/rootfiles/GEn/hodocalib/TWcalib";
-    work_dir = "/w/work5/home/garyp/sbs/rootfiles/GEn/hodocalib/GEMcalib2";
-  gSystem->Setenv("ROOTFILE_DIR",work_dir);
-  //
+  
+  gSystem->Setenv("ROOTFILE_DIR",Rootfile_Dir);  
   
   TChain* C = new TChain("T");
   
@@ -160,23 +167,23 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
   }else if (Exp == "GMN"){
     if( kin_no == 4) { //SBS-4
       //sbsmag 30%
-      //C->Add("$OUT_DIR/LH2/*11499*.root");
-      //C->Add("$OUT_DIR/LH2/*11500*.root");
-      //C->Add("$OUT_DIR/LH2/*11520*.root");
-      //C->Add("$OUT_DIR/LH2/*11547*.root");
+      //C->Add("$ROOTFILE_DIR/LH2/*11499*.root");
+      //C->Add("$ROOTFILE_DIR/LH2/*11500*.root");
+      //C->Add("$ROOTFILE_DIR/LH2/*11520*.root");
+      //C->Add("$ROOTFILE_DIR/LH2/*11547*.root");
       //C->Add("/work/halla/sbs/ralphmm/Rootfiles/e1209019_fullreplay_11547_stream0_seg0_76.root");
-      //C->Add("$OUT_DIR/LH2/*11548*.root");
+      //C->Add("$ROOTFILE_DIR/LH2/*11548*.root");
       //sbsmag off
-      //C->Add("$OUT_DIR/LH2/*11573*.root");
-      //C->Add("$OUT_DIR/LH2/*11587*.root");
-      //C->Add("$OUT_DIR/LH2/*11588*.root");
+      //C->Add("$ROOTFILE_DIR/LH2/*11573*.root");
+      //C->Add("$ROOTFILE_DIR/LH2/*11587*.root");
+      //C->Add("$ROOTFILE_DIR/LH2/*11588*.root");
       //sbsmag 50%
-      // C->Add("$OUT_DIR/e1209019_fullreplay_11562*.root");
-      //C->Add("$OUT_DIR/LH2/e1209019_fullreplay_11590*.root");
-      //C->Add("$OUT_DIR/LH2/e1209019_fullreplay_11592*.root");
-      //C->Add("$OUT_DIR/LH2/e1209019_fullreplay_11616*.root");
+      // C->Add("$ROOTFILE_DIR/e1209019_fullreplay_11562*.root");
+      //C->Add("$ROOTFILE_DIR/LH2/e1209019_fullreplay_11590*.root");
+      //C->Add("$ROOTFILE_DIR/LH2/e1209019_fullreplay_11592*.root");
+      //C->Add("$ROOTFILE_DIR/LH2/e1209019_fullreplay_11616*.root");
     
-      C->Add("$OUT_DIR/../e1209019_fullreplay_11547_stream0_seg0_76*.root");
+      C->Add("$ROOTFILE_DIR/../e1209019_fullreplay_11547_stream0_seg0_76*.root");
 
       run_no = 11547;
 
@@ -207,23 +214,23 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
     }  
     else if( kin_no == 44) { //SBS-4
       //sbsmag 30%
-      //C->Add("$OUT_DIR/LH2/*11499*.root");
-      //C->Add("$OUT_DIR/LH2/*11500*.root");
-      //C->Add("$OUT_DIR/LH2/*11520*.root");
-      //C->Add("$OUT_DIR/LH2/*11547*.root");
+      //C->Add("$ROOTFILE_DIR/LH2/*11499*.root");
+      //C->Add("$ROOTFILE_DIR/LH2/*11500*.root");
+      //C->Add("$ROOTFILE_DIR/LH2/*11520*.root");
+      //C->Add("$ROOTFILE_DIR/LH2/*11547*.root");
       //    C->Add("/work/halla/sbs/ralphmm/Rootfiles/e1209019_fullreplay_11547_stream0_seg0_76.root");
-      //C->Add("$OUT_DIR/LH2/*11548*.root");
+      //C->Add("$ROOTFILE_DIR/LH2/*11548*.root");
       //sbsmag off
-      //C->Add("$OUT_DIR/LH2/*11573*.root");
-      //C->Add("$OUT_DIR/LH2/*11587*.root");
-      //C->Add("$OUT_DIR/LH2/*11588*.root");
+      //C->Add("$ROOTFILE_DIR/LH2/*11573*.root");
+      //C->Add("$ROOTFILE_DIR/LH2/*11587*.root");
+      //C->Add("$ROOTFILE_DIR/LH2/*11588*.root");
       //sbsmag 50%
-      // C->Add("$OUT_DIR/e1209019_fullreplay_11562*.root");
-      //C->Add("$OUT_DIR/LH2/e1209019_fullreplay_11590*.root");
-      //C->Add("$OUT_DIR/LH2/e1209019_fullreplay_11592*.root");
-      //C->Add("$OUT_DIR/LH2/e1209019_fullreplay_11616*.root");
+      // C->Add("$ROOTFILE_DIR/e1209019_fullreplay_11562*.root");
+      //C->Add("$ROOTFILE_DIR/LH2/e1209019_fullreplay_11590*.root");
+      //C->Add("$ROOTFILE_DIR/LH2/e1209019_fullreplay_11592*.root");
+      //C->Add("$ROOTFILE_DIR/LH2/e1209019_fullreplay_11616*.root");
     
-      C->Add("$OUT_DIR/../e1209019_fullreplay_11562*.root");
+      C->Add("$ROOTFILE_DIR/../e1209019_fullreplay_11562*.root");
 
       run_no = 11562;
 
@@ -254,7 +261,7 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
     }  
     else if( kin_no == 440) { //SBS-4
     
-      C->Add("$OUT_DIR/../SBS4_LH2/*.root");
+      C->Add("$ROOTFILE_DIR/../SBS4_LH2/*.root");
 
       run_no = 11562;
 
@@ -284,9 +291,9 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
 
     }  
     else if( kin_no == 7) { //SBS-7
-      //C->Add("$OUT_DIR/LH2/e1209019_fullreplay_11994_stream0_seg0_99.root");
-      C->Add("$OUT_DIR/../e1209019_fullreplay_11994_stream0_seg0_122*.root");
-      //C->Add("$OUT_DIR/LH2/gmn_replayed_11994*.root");
+      //C->Add("$ROOTFILE_DIR/LH2/e1209019_fullreplay_11994_stream0_seg0_99.root");
+      C->Add("$ROOTFILE_DIR/../e1209019_fullreplay_11994_stream0_seg0_122*.root");
+      //C->Add("$ROOTFILE_DIR/LH2/gmn_replayed_11994*.root");
 
       run_no = 11994;
     
@@ -317,11 +324,11 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
     }
     else if( kin_no == 11) { //SBS-11
 
-      C->Add("$OUT_DIR/../fADDC/e1209019_fullreplay_12313_stream0_seg*.root");
+      C->Add("$ROOTFILE_DIR/../fADDC/e1209019_fullreplay_12313_stream0_seg*.root");
 
-      //     C->Add("$OUT_DIR/LH2/*12313*.root");
-      //     C->Add("$OUT_DIR/LH2/*12320*.root");
-      //     C->Add("$OUT_DIR/LH2/*12345*.root");
+      //     C->Add("$ROOTFILE_DIR/LH2/*12313*.root");
+      //     C->Add("$ROOTFILE_DIR/LH2/*12320*.root");
+      //     C->Add("$ROOTFILE_DIR/LH2/*12345*.root");
 
       run_no = 12313;
 
@@ -348,11 +355,11 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
     }
     else if( kin_no == 14) { //SBS-14
 
-      //     C->Add("$OUT_DIR/LH2/gmn_replayed_13241*.root");
-      //     C->Add("$OUT_DIR/LH2/gmn_replayed_13242*.root");
-      //     C->Add("$OUT_DIR/LH2/gmn_replayed_13243*.root");
+      //     C->Add("$ROOTFILE_DIR/LH2/gmn_replayed_13241*.root");
+      //     C->Add("$ROOTFILE_DIR/LH2/gmn_replayed_13242*.root");
+      //     C->Add("$ROOTFILE_DIR/LH2/gmn_replayed_13243*.root");
 
-      C->Add("$OUT_DIR/../e1209019_fullreplay_1324*.root");
+      C->Add("$ROOTFILE_DIR/../e1209019_fullreplay_1324*.root");
 
       run_no = 13244;
 
@@ -380,15 +387,15 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
     }
     else if( kin_no == 8) { //SBS-8
       //production
-      //C->Add("$OUT_DIR/LH2/e1209019_fullreplay_13486_stream0_seg8*.root");
-      //    C->Add("$OUT_DIR/LH2/e1209019_fullreplay_13486*.root"); 
+      //C->Add("$ROOTFILE_DIR/LH2/e1209019_fullreplay_13486_stream0_seg8*.root");
+      //    C->Add("$ROOTFILE_DIR/LH2/e1209019_fullreplay_13486*.root"); 
 
-      C->Add("$OUT_DIR/../e1209019_fullreplay_13486*.root");
+      C->Add("$ROOTFILE_DIR/../e1209019_fullreplay_13486*.root");
 
       run_no = 13486;
     
       //sbs magnet off
-      //C->Add("$OUT_DIR/LH2/e1209019_fullreplay_13461*.root");
+      //C->Add("$ROOTFILE_DIR/LH2/e1209019_fullreplay_13461*.root");
     
       Eb      = 6.0;   
       th_bb   = 26.5; 
@@ -413,15 +420,15 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
     }
     else if( kin_no == 18) { //SBS-8
       //production
-      //C->Add("$OUT_DIR/LH2/e1209019_fullreplay_13486_stream0_seg8*.root");
-      //    C->Add("$OUT_DIR/LH2/e1209019_fullreplay_13486*.root"); 
+      //C->Add("$ROOTFILE_DIR/LH2/e1209019_fullreplay_13486_stream0_seg8*.root");
+      //    C->Add("$ROOTFILE_DIR/LH2/e1209019_fullreplay_13486*.root"); 
 
-      C->Add("$OUT_DIR/../e1209019_fullreplay_13608*.root");
+      C->Add("$ROOTFILE_DIR/../e1209019_fullreplay_13608*.root");
 
       run_no = 13608;
     
       //sbs magnet off
-      //C->Add("$OUT_DIR/LH2/e1209019_fullreplay_13461*.root");
+      //C->Add("$ROOTFILE_DIR/LH2/e1209019_fullreplay_13461*.root");
     
       Eb      = 6.0;   
       th_bb   = 26.5; 
@@ -445,14 +452,14 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
       pdiffcut = 0.1;
     }
     else if( kin_no == 9) { //SBS-9
-      //C->Add("$OUT_DIR/LH2/e1209019_fullreplay_13683_stream0_seg8*.root");
-      //C->Add("$OUT_DIR/LH2/e1209019_fullreplay_13657*.root"); 
-      //C->Add("$OUT_DIR/LH2/e1209019_fullreplay_13683*.root"); 
-      //C->Add("$OUT_DIR/LH2/e1209019_fullreplay_13696*.root"); 
-      //C->Add("$OUT_DIR/LH2/e1209019_fullreplay_13697*.root");
+      //C->Add("$ROOTFILE_DIR/LH2/e1209019_fullreplay_13683_stream0_seg8*.root");
+      //C->Add("$ROOTFILE_DIR/LH2/e1209019_fullreplay_13657*.root"); 
+      //C->Add("$ROOTFILE_DIR/LH2/e1209019_fullreplay_13683*.root"); 
+      //C->Add("$ROOTFILE_DIR/LH2/e1209019_fullreplay_13696*.root"); 
+      //C->Add("$ROOTFILE_DIR/LH2/e1209019_fullreplay_13697*.root");
       //    C->Add("/work/halla/sbs/ralphmm/Rootfiles/e1209019_fullreplay_13656*.root");
     
-      C->Add("$OUT_DIR/../e1209019_fullreplay_13656_stream0_seg0_106*.root");
+      C->Add("$ROOTFILE_DIR/../e1209019_fullreplay_13656_stream0_seg0_106*.root");
 
       run_no = 13656;
 
@@ -478,14 +485,14 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
       pdiffcut = 0.2;
     }
     else if( kin_no == 19) { //SBS-9
-      //C->Add("$OUT_DIR/LH2/e1209019_fullreplay_13683_stream0_seg8*.root");
-      //C->Add("$OUT_DIR/LH2/e1209019_fullreplay_13657*.root"); 
-      //C->Add("$OUT_DIR/LH2/e1209019_fullreplay_13683*.root"); 
-      //C->Add("$OUT_DIR/LH2/e1209019_fullreplay_13696*.root"); 
-      //C->Add("$OUT_DIR/LH2/e1209019_fullreplay_13697*.root");
+      //C->Add("$ROOTFILE_DIR/LH2/e1209019_fullreplay_13683_stream0_seg8*.root");
+      //C->Add("$ROOTFILE_DIR/LH2/e1209019_fullreplay_13657*.root"); 
+      //C->Add("$ROOTFILE_DIR/LH2/e1209019_fullreplay_13683*.root"); 
+      //C->Add("$ROOTFILE_DIR/LH2/e1209019_fullreplay_13696*.root"); 
+      //C->Add("$ROOTFILE_DIR/LH2/e1209019_fullreplay_13697*.root");
       //    C->Add("/work/halla/sbs/ralphmm/Rootfiles/e1209019_fullreplay_13656*.root");
     
-      C->Add("$OUT_DIR/../e1209019_fullreplay_13681_*.root");
+      C->Add("$ROOTFILE_DIR/../e1209019_fullreplay_13681_*.root");
 
       run_no = 13681;
 
@@ -779,7 +786,7 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
   TVector3 hcal_xaxis(0,-1,0);
   TVector3 hcal_yaxis = hcal_zaxis.Cross( hcal_xaxis ).Unit();
   
-  Double_t bbth_vscint[] = {
+  vector<Double_t> default_vscint = {
     0.180805, 0.175, 0.1828, 0.170004, 0.155359, 0.175734, 0.165697, 0.148091, 0.149093, 0.157593, 0.156496, 0.147809, 0.144615, 0.155042,
     0.153622, 0.156597, 0.18024, 0.189606, 0.18859, 0.191777, 0.187433, 0.18625, 0.194762, 0.181658, 0.170269, 0.173745, 0.17409,  0.178897,
     0.182398, 0.181071, 0.178551, 0.173263, 0.173062, 0.182632, 0.172438, 0.163344, 0.163478, 0.173636, 0.17075, 0.174676, 0.170085, 0.175636,
@@ -787,7 +794,7 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
     0.157068, .155213, .157255, .162826, .16233, .162542, .165997, .166097, .170121, .17755, .181141, .16835,  .164615, .186073, .204715,
     0.191067, .181214, .166507, .149339, .136413, .147212, .154051, .140077, .202052, .178857, .175, .20838, .150853, .175, .175, .175, .175, .175  };
 
-  Double_t bbth_tdiffoffset[] = {
+  vector<Double_t> default_tdiff = {
     -2.65084, -0.68, -2.66389, -2.85596, -2.41139, -1.71499, -1.25864, -1.16894, -1.055, -1.28258, -1.46683, -1.43057, -1.65976, -1.37499, -1.36125,
     -1.29987, -0.87604, -0.896621, -1.0101, -1.07004, -1.1659, -1.16767, -1.10648, -1.06361, -1.25146, -1.18546, -1.04481, -0.923806, -0.746351,
     -0.927521, -1.17295, -1.4767, -1.36772, -1.03762, -0.826993, -0.553472, -0.405161, 0.00429142, -0.024965, 0.000631514, -0.202755, -0.210413,
@@ -795,6 +802,44 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
     -0.656796, -0.670947, -0.659558, -0.629137, -0.787749, -1.01695, -1.05689, -1.10139, -0.999139, -0.783825, -0.621926, -0.412212, -0.379391,
     -0.445681, -0.411827, -0.73396, -0.874087, -0.716473, -0.794139, -0.821767, -0.755983, -1.13393, -0.768597, 2.05995, 1.49198,   -0.35568,
     -0.211182, -0.68, -0.356193, -0.945469, -0.68, -0.68, -0.68, -0.68, -0.68 };
+  
+  vector<Double_t> bbth_vscint;
+  vector<Double_t> bbth_tdiffoffset;
+  
+  Int_t linenum=0;
+  string line;
+  
+  fstream vscintfile;
+  vscintfile.open("vscint_2.txt",ios::in);
+  if(!vscintfile.is_open()){
+    cout << "vscint file not found, defaulting to gmn4 values." << endl;
+    bbth_vscint = default_vscint;
+    //exit(1);
+  }else
+    while(getline(vscintfile,line)){
+      if(linenum>0){
+	bbth_vscint.push_back(stod(line));
+      }
+      linenum++;
+    }
+  vscintfile.close();
+  
+
+  linenum=0;
+  fstream tdifffile;
+  tdifffile.open("tdiff_2.txt",ios::in);
+  if(!tdifffile.is_open()){
+    cout << "tdiff file not found, defaulting to gmn4 values." << endl;
+    bbth_tdiffoffset = default_tdiff;
+    //exit(1);
+  }else
+    while(getline(tdifffile,line)){
+      if(linenum>0){
+	bbth_tdiffoffset.push_back(stod(line));
+      }
+      linenum++;
+    }
+  tdifffile.close();
   
   
   ////////////////////////////////////////////////////////
@@ -1350,8 +1395,8 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
     hth2d_ydiff->GetYaxis()->SetTitle("Hodoscope Bar ID");
     
     c1->Print("bbhodo_temp1.pdf");
-    c1->cd();
-
+    c1->Close();
+    
     //-----------------------------------------------------------------------------------------------------------------------------
     // Hodoscope bar efficiencies and resolution plots
     //-----------------------------------------------------------------------------------------------------------------------------
@@ -1364,7 +1409,7 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
 
     c2->cd(1);
 
-    tex = new TLatex( 0.34, 0.6, Form("SBS-%d", kin_no1 ));
+    tex = new TLatex( 0.34, 0.6, Form("%s-%d", Exp.Data(),kin_no1 ));
     tex->SetNDC(1);
     tex->SetTextFont(42);
     tex->SetTextColor(1);
@@ -1678,9 +1723,9 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
     tex->SetTextSize(0.055);
     tex->Draw();
     
-    c2->Print("bbhodo_temp2.pdf");
+    //c2->Print("bbhodo_temp2.pdf");
     c2->Print(Form("HodoTime_SBSC-%d.pdf", kin_no1));  
-    c2->cd();
+    c2->Close();
 
     //-----------------------------------------------------------------------------------------------------------------------------
 
@@ -1689,7 +1734,7 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
 
     c223->cd(1);
 
-    tex = new TLatex( 0.34, 0.6, Form("SBS-%d", kin_no1 ));
+    tex = new TLatex( 0.34, 0.6, Form("%s-%d", Exp.Data(),kin_no1 ));
     tex->SetNDC(1);
     tex->SetTextFont(42);
     tex->SetTextColor(1);
@@ -1756,7 +1801,7 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
     tex->Draw();
 
     c223->Print(Form("HodoTime_SBSA-%d.pdf", kin_no1));  
-    c223->cd();
+    c223->Close();
 
     //-----------------------------------------------------------------------------------------------------------------------------
 
@@ -1765,7 +1810,7 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
 
     c222->cd(1);
 
-    tex = new TLatex( 0.34, 0.6, Form("SBS-%d", kin_no1 ));
+    tex = new TLatex( 0.34, 0.6, Form("%s-%d",Exp.Data(), kin_no1 ));
     tex->SetNDC(1);
     tex->SetTextFont(42);
     tex->SetTextColor(1);
@@ -1837,9 +1882,9 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
     tex->SetTextSize(0.055);
     tex->Draw();
     
-    c222->Print("bbhodo_temp222.pdf");
+    //c222->Print("bbhodo_temp222.pdf");
     c222->Print(Form("HodoTime_SBSB-%d.pdf", kin_no1));  
-    c222->cd();
+    c222->Close();
     
   }  
 
@@ -1847,6 +1892,7 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
   // Pre-shower and Shower correlation plots
   //-----------------------------------------------------------------------------------------------------------------------------
 
+  /*
   if( PlotBBCal ) {
 
     TCanvas* c3 = new TCanvas("c3","",1200,800);
@@ -1967,9 +2013,9 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
 
     c3->Print("kinematics_1.pdf");
     c3->Print("bbhodo_temp3.pdf");
-    //c3->cd();
+    c3->Close();
   }
-
+  
   //-----------------------------------------------------------------------------------------------------------------------------
   // Kinematic plots
   //-----------------------------------------------------------------------------------------------------------------------------
@@ -2029,7 +2075,7 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
 
     c4->Print("bbhodo_temp4.pdf");
     c4->Print("kinematics_2.pdf");
-    //c4->cd();
+    c4->Close();
     
     TCanvas* c5 = new TCanvas("c5","",1200,800);
     c5->Divide(4,2);
@@ -2182,9 +2228,10 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
     c5->Print("bbhodo_temp5.pdf");
     c5->Print("kinematics_3.pdf");
     //c5->Print("kinematics_aftercuts.C");
-    //c5->cd();
+    c5->Close();
   }
-
+  */
+  
   //-----------------------------------------------------------------------------------------------------------------------------
   // Optics plots
   //-----------------------------------------------------------------------------------------------------------------------------
@@ -2248,7 +2295,62 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
 
     c6->Print("bbhodo_temp6.pdf");
     //c6->Print("kinematics_4.pdf");
-    c6->cd();
+    c6->Close();
+    
+    if( PlotDiff ) {
+      TCanvas* cdiff = new TCanvas();
+      cdiff->cd();
+      const Double_t fEff_c     = 0.175; 
+      const Double_t fDiff_cut = 0.1;
+      
+      ofstream tdiffOutFile;
+      tdiffOutFile.open(Form("tdiff_%d.txt",kin_no));
+      if(!tdiffOutFile.is_open()){
+	cout << "Couldn't open tdiff out file! Exiting!" << endl;
+	exit(2);
+      }
+      ofstream vscintOutFile;
+      vscintOutFile.open(Form("vscint_%d.txt",kin_no));
+      if(!vscintOutFile.is_open()){
+	cout << "Couldn't open vscint out file! Exiting!" << endl;
+	exit(2);
+      }
+      
+      
+      TF1 *f1 = new TF1("f1","[0]+[1]*x",-0.25,0.25);
+      f1->SetLineColor(kRed);    
+
+      Double_t td0[nBarsTDC];
+      Double_t vsc[nBarsTDC];
+
+      for(Int_t i=0; i<nBarsTDC; i++) {
+	hDiff[i]->Fit(f1,"Q");
+	td0[i] = 2*f1->GetParameter(0);
+	vsc[i] = -1./f1->GetParameter(1);
+	cout << td0[i] << " " << vsc[i] << " " << f1->GetChisquare()/f1->GetNDF() << endl;
+      }
+
+      vscintOutFile << "bb.hodotdc.vscint =" << endl;
+      for(Int_t i=0; i<nBarsTDC; i++) {
+	if( fabs(vsc[i] - fEff_c  ) > fDiff_cut )
+	  vscintOutFile << fEff_c << endl;
+	else
+	  vscintOutFile << vsc[i] << endl;
+      }
+
+
+      tdiffOutFile << "bb.hodotdc.tdiffoffset =" << endl;
+      for(Int_t i=0; i<nBarsTDC; i++) {
+	if( fabs(vsc[i] - fEff_c ) > fDiff_cut )
+	  tdiffOutFile << -0.68 << endl;
+	else
+	  tdiffOutFile << td0[i] << endl;
+      }
+    
+      vscintOutFile.close();
+      tdiffOutFile.close();    
+      cdiff->Close();
+    }
     
     TCanvas* c7 = new TCanvas("c7","",1200,800);
     c7->Divide(4,2);
@@ -2294,7 +2396,7 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
     hopt_ph_pc->GetYaxis()->SetTitle("p_{bbtrack} [GeV/c]");
 
     c7->Print("bbhodo_temp7.pdf");
-    c7->cd();
+    c7->Close();
   }
 
   
@@ -2302,6 +2404,7 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
   // HCal plots
   //-----------------------------------------------------------------------------------------------------------------------------
 
+  /*
   if( PlotHCal ) {
 
     TCanvas* c8 = new TCanvas("c8","",1200,800);
@@ -2390,7 +2493,7 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
     
     c8->Print("kinematics_5.pdf");
     c8->Print("bbhodo_temp8.pdf");
-    //c8->cd();
+    c8->Close();
   
     
     TCanvas *c9 = new TCanvas("c9","",1200,800);
@@ -2496,7 +2599,7 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
     tex->Draw();
     
     c9->Print("kinematics_6.pdf");
-    //c9->cd();
+    c9->Close();
   }
 
   if( PlotfADC ) {
@@ -2519,15 +2622,11 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
     hth_fadcl2->Draw("");
 
     c66->Print("bbhodo_temp66.pdf");
-    c66->cd();
+    c66->Close();
   } 
-
-  //gSystem->Exec(Form("pdfunite  bbhodo_temp*.pdf fullanalysis_SBS-%d.pdf", kin_no));  
-
-  gSystem->Exec(Form("pdfunite  kinem*.pdf Heep_SBS-%d.pdf", kin_no));  
-  gSystem->Exec("rm  kinema*.pdf");  
-  gSystem->Exec(Form("pdfunite  bbhodo*.pdf PlotHodo_SBS-%d.pdf", kin_no));  
-  gSystem->Exec(Form("pdfunite  HodoTime*.pdf BBHodoTime_SBS-%d.pdf", kin_no));  
+  */
+  
+  gSystem->Exec(Form("pdfunite bbhodo*.pdf HodoTime*.pdf BBHodo_%s%d-%s.pdf",Exp.Data(), kin_no, Target.Data()));
   gSystem->Exec("rm  HodoTime*.pdf");  
   gSystem->Exec("rm  bbhodo_temp*.pdf");  
   
