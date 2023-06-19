@@ -3,7 +3,7 @@
 //
 // Requires Podd 1.7.4
 
-//#if !defined(__CLING__) || defined(__ROOTCLING__)
+#if !defined(__CLING__) || defined(__ROOTCLING__)
 #include <iostream>
 
 #include "TSystem.h"
@@ -38,66 +38,21 @@
 #include "LHRSScalerEvtHandler.h"
 #include "SBSScalerEvtHandler.h"
 #include "SBSScalerHelicity.h"
-//#endif
+#endif
 
 using namespace std;
 
 //void replay_BBHodoRaw(UInt_t runnum=10491, Long_t nevents=-1, Long_t firstevent=1, const char *fname_prefix="e1209016", UInt_t firstsegment=0, UInt_t maxsegments=1, Int_t maxstream=2, Int_t pedestalmode=0, Int_t cmplots=1, Int_t usesbsgems=1)
-void replay_BBHodoRaw(UInt_t runnum=2236, Long_t nevents=50000, uint firstsegment=0, uint maxsegments=1, const char *fname_prefix="e1209016")
+void replay_BBHodoRawNew(UInt_t runnum=2236, Long_t nevents=50000, uint firstsegment=0, uint maxsegments=1, const char *fname_prefix="e1209016")
 {
  
   Long_t firstevent=1;
   UInt_t maxstream=2;
-  Int_t pedestalmode=0;
   Int_t cmplots=1;
-  Int_t usesbsgems=0;
-
+  
   THaAnalyzer* analyzer = new THaAnalyzer;
 
   SBSBigBite* bigbite = new SBSBigBite("bb", "BigBite spectrometer" );
-  //bigbite->AddDetector( new SBSBBShower("ps", "BigBite preshower") );
-  //bigbite->AddDetector( new SBSBBShower("sh", "BigBite shower") );
-  
-  
-  SBSBBTotalShower* ts= new SBSBBTotalShower("ts", "sh", "ps", "BigBite shower");
-  ts->SetDataOutputLevel(0);
-  bigbite->AddDetector( ts );
-  ts->SetStoreEmptyElements(kFALSE);
-  ts->GetShower()->SetStoreEmptyElements(kFALSE);
-  ts->GetPreShower()->SetStoreEmptyElements(kFALSE);
-
-  
-  SBSGenericDetector* bbtrig= new SBSGenericDetector("bbtrig","BigBite shower ADC trig");
-  bbtrig->SetModeADC(SBSModeADC::kADC);
-  bbtrig->SetModeTDC(SBSModeTDC::kTDC);
-  bbtrig->SetStoreEmptyElements(kFALSE);
-  bigbite->AddDetector( bbtrig );
-
-  SBSGenericDetector* tdctrig= new SBSGenericDetector("tdctrig","BigBite shower TDC trig");
-  tdctrig->SetModeADC(SBSModeADC::kNone);
-  tdctrig->SetModeTDC(SBSModeTDC::kTDC);
-  tdctrig->SetStoreEmptyElements(kFALSE);
-  bigbite->AddDetector( tdctrig );
-
-  //SBSGenericDetector *grinch_tdc = new SBSGenericDetector("grinch_tdc","GRINCH TDC data");
-  //SBSCherenkovDetector *grinch_tdc = new SBSCherenkovDetector("grinch_tdc","GRINCH TDC data");
-  /*
-  SBSGRINCH *grinch_tdc = new SBSGRINCH("grinch_tdc","GRINCH TDC data");
-  SBSGenericDetector *grinch_adc = new SBSGenericDetector("grinch_adc","GRINCH ADC data");
-  grinch_adc->SetModeADC(SBSModeADC::kWaveform);
-  grinch_adc->SetModeTDC(SBSModeTDC::kNone);
-  grinch_adc->SetStoreEmptyElements(kFALSE);
-  grinch_adc->SetStoreRawHits(kFALSE);
-
-  grinch_tdc->SetModeTDC(SBSModeTDC::kTDC);
-  //grinch_tdc->SetModeTDC(SBSModeTDC::kCommonStartTDC);
-  grinch_tdc->SetModeADC(SBSModeADC::kNone);
-  grinch_tdc->SetStoreEmptyElements(kFALSE);
-  grinch_tdc->SetStoreRawHits(kFALSE);
-  grinch_tdc->SetDisableRefTDC(true);
-  bigbite->AddDetector(grinch_adc);
-  bigbite->AddDetector(grinch_tdc);
-  */
   
   SBSTimingHodoscope* hodotdc = new  SBSTimingHodoscope("hodotdc", "BigBite hodo");
   hodotdc->SetModeTDC(SBSModeTDC::kTDC);
@@ -114,69 +69,9 @@ void replay_BBHodoRaw(UInt_t runnum=2236, Long_t nevents=50000, uint firstsegmen
   //hodoadc->SetDataOutputLevel(0);
   bigbite->AddDetector(hodotdc);
   bigbite->AddDetector(hodoadc);
-  
-  //SBSGEMSpectrometerTracker *bbgem = new SBSGEMSpectrometerTracker("gem", "BigBite Hall A GEM data");
-  //bool pm =  ( pedestalmode != 0 );
-  //this will override the database setting:
-  //bbgem->SetPedestalMode( pm );
-  //bbgem->SetMakeCommonModePlots( cmplots );
-  //bigbite->AddDetector(bbgem);
   gHaApps->Add(bigbite);
-
-  /*
-  SBSEArm *harm = new SBSEArm("sbs","Hadron Arm with HCal");
-  SBSHCal* hcal =  new SBSHCal("hcal","HCAL");
-  //hcal->SetStoreRawHits(kTRUE);
-  hcal->SetStoreEmptyElements(kFALSE);
-  harm->AddDetector(hcal);
-
-  SBSGenericDetector* sbstrig= new SBSGenericDetector("trig","HCal trigs");
-  sbstrig->SetModeADC(SBSModeADC::kWaveform);
-  //sbstrig->SetStoreRawHits(kTRUE);
-  sbstrig->SetStoreEmptyElements(kFALSE);
-  harm->AddDetector( sbstrig );
-
-  SBSGEMSpectrometerTracker *sbsgem = new SBSGEMSpectrometerTracker("gem", "Super BigBite Hall A GEM data");
-  sbsgem->SetPedestalMode( pm );
-  sbsgem->SetMakeCommonModePlots( cmplots );
-  if (usesbsgems != 0 ) harm->AddDetector(sbsgem); 
-
-  gHaApps->Add(harm);
-  
-  // add decoder
-  THaApparatus* decL = new THaDecData("DL","Misc. Decoder Data");
-  gHaApps->Add( decL );
-
-  // add *rastered* beam
-  THaApparatus* Lrb = new SBSRasteredBeam("Lrb","Raster Beamline for FADC");
-  gHaApps->Add(Lrb);
-
-  Lrb->AddDetector( new SBSScalerHelicity("scalhel","Scaler Helicity info"));
-
-  THaApparatus* sbs = new SBSRasteredBeam("SBSrb","Raster Beamline for FADC");
-  gHaApps->Add(sbs);
-  */
-
-
-  gHaPhysics->Add( new THaGoldenTrack( "BB.gold", "BigBite golden track", "bb" ));
-  gHaPhysics->Add( new THaPrimaryKine( "e.kine", "electron kinematics", "bb", 0.0, 0.938272 ));
-
-  //gHaEvtHandlers->Add (new THaScalerEvtHandler("Left","HA scaler event type 140"));
-  //gHaEvtHandlers->Add (new THaScalerEvtHandler("SBS","HA scaler event type 141"));
-
   //bigbite->SetDebug(2);
   //harm->SetDebug(2);
-
-  LHRSScalerEvtHandler *lScaler = new LHRSScalerEvtHandler("Left","HA scaler event type 140");
-  // lScaler->SetDebugFile(&debugFile);
-  gHaEvtHandlers->Add(lScaler);
-
-  SBSScalerEvtHandler *sbsScaler = new SBSScalerEvtHandler("sbs","SBS Scaler Bank event type 1");
-  //sbsScaler->AddEvtType(1);             // Repeat for each event type with scaler banks
-  sbsScaler->SetUseFirstEvent(kTRUE);
-  gHaEvtHandlers->Add(sbsScaler);
-
-  //THaInterface::SetDecoder( SBSSimDecoder::Class() );
   
   TString prefix = gSystem->Getenv("DATA_DIR");
 
@@ -311,38 +206,3 @@ void replay_BBHodoRaw(UInt_t runnum=2236, Long_t nevents=50000, uint firstsegmen
 
 }
 
-
-// int main(int argc, char *argv[])
-// {
-//   //does this int main actually get called when we run our script?
-//   new THaInterface( "The Hall A analyzer", &argc, argv, 0, 0, 1 );
-//   uint runnum = 220;
-//   uint firstsegment = 0;
-//   uint maxsegments = 0;
-//   string name_prefix = "e1209019";
-//   long firstevent=0;
-//   long nevents=-1;
-//   int pedestalmode=0;
-//   uint nev = -1;
-//   if(argc<2 || argc>8){
-//     cout << "Usage: replay_gmn runnum(uint) nevents(ulong) firstevent(ulong)"
-// 	 << endl
-// 	 << "                  name_prefix(string) firstsegment(uint) maxsegments(uint) "
-// 	 << endl
-// 	 << "                  pedestalmode(int)"
-// 	 << endl;
-//     return -1;
-//   }
-//   if(argc>=2) runnum = atoi(argv[1]);
-//   if(argc>=3) firstsegment = atoi(argv[2]);
-//   if(argc>=4) maxsegments = atoi(argv[3]);
-//   if(argc>=5) name_prefix = argv[4];
-//   if(argc>=6) firstevent = atoi(argv[5]);
-//   if(argc>=7) nevents = atoi(argv[6]);
-//   if(argc>=8) pedestalmode = atoi(argv[7]);
-
-//   replay_gmn(runnum, nevents, firstevent,
-// 	     name_prefix.c_str(), firstsegment, maxsegments,
-// 	     pedestalmode);
-//   return 0;
-// }
