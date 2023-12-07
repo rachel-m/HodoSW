@@ -26,7 +26,7 @@ const Double_t ADCCUT = 150.;//100.0;
 //TString REPLAYED_DIR = "/w/work0/home/rachel/HallA/BB_Hodo/FallRun2021/Replayed";
 //TString ANALYSED_DIR = "/w/work0/home/rachel/HallA/BB_Hodo/FallRun2021/Analysed";
 
-TString REPLAYED_DIR = "/w/work5/home/garyp/sbs/rootfiles/GEn/";
+TString REPLAYED_DIR = "/w/work5/home/garyp/sbs/rootfiles/GEn/hodocalib/TWcalib/";
 TString ANALYSED_DIR = "/w/work5/home/garyp/sbs/results/hodocalib/";
 
 using namespace std;
@@ -161,11 +161,16 @@ void FitTimeWalk(const TString InFile="e1209016", Int_t nevents=-1, Int_t cosmic
 			     NTotBins, TotBinLow, TotBinHigh,
 			     NLEBins, LEBinLow, LEBinHigh
 			     );
+    hLeVTOTL[bar]->GetXaxis()->SetTitle("Time Over Threshold [ns]");
+    hLeVTOTL[bar]->GetYaxis()->SetTitle("Leading Edge [ns]");
+	
     hLeVTOTR[bar] = new TH2F(TString::Format("hLeVTOT_Bar%d_R",bar),
 			     TString::Format("hLeVTOT_Bar%d_R",bar),
 			     NTotBins, TotBinLow, TotBinHigh,
 			     NLEBins, LEBinLow, LEBinHigh
 			     );
+    hLeVTOTR[bar]->GetXaxis()->SetTitle("Time Over Threshold [ns]");
+    hLeVTOTR[bar]->GetYaxis()->SetTitle("Leading Edge [ns]");
   }
 
   //adc histos to check if cutting on adc
