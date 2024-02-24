@@ -28,7 +28,7 @@
 #include <TTreeReader.h>
 #include <TTreeReaderArray.h>
 
-#include "GEnTree.C"
+//#include "GEnTree.C"
 
 using namespace std;
 
@@ -41,9 +41,7 @@ double GetRF(double rftime, double time0, const double bunch = 4.008){
 void RFSearch(){
 
   TChain *C = new TChain("T");
-  C->Add("/w/work5/home/garyp/sbs/rootfiles/GEn/hodocalib/GEMcalib/*.root");
-  //C->Add("/w/work5/home/garyp/sbs/rootfiles/GEn/hodocalib/GEMcalib/e1209016_fullreplay_2008_stream0_2_seg0_0.root");
-  //GEnTree *T = new GEnTree(C);
+  C->Add("$ROOTFILE_DIR/*.root");
   
   Long64_t nev = C->GetEntries();
   
@@ -128,6 +126,9 @@ void RFSearch(){
 				    100,-1,-1);
 
   
+  TH2D *hRF_Trig = new TH2D("hRF_Trig","",
+			    100,rfLO,rfHI,
+			    100,250,400);
   //hodo clus
   TTreeReaderArray<double> bb_hodotdc_clus_tmean(rd,"bb.hodotdc.clus.tmean");
   //hodo clus_bar
@@ -167,7 +168,7 @@ void RFSearch(){
   for (Long64_t ev=0; ev<nev; ev++){
     
     rd.SetEntry(ev);
-    if(ev%100000==0) cout << ev << " / " << nev << endl;
+    if(ev%10000==0) cout << ev << " / " << nev << endl;
     
     if (*bb_tr_n <= 0.) continue;
     if (*bb_ps_e / bb_tr_p[0] < 0.1) continue;
@@ -276,7 +277,7 @@ void RFSearch(){
     htmean_sh->Fill(sh_time,hodotm);
     htmean_gr->Fill(grinchtm,hodotm);
     
-    
+    hRF_Trig->Fill(rftime, trigtime);
   }
   
   cout << "Events missing tdctrig 4: " << badRF << endl;
@@ -341,8 +342,7 @@ void RFSearch(){
   hRF_gr_hodo->Draw("colz");
   c2->Print("Hodo_RF_2D.png");
   c2->Close();
-  */
-
+  
   hRF_hodomult->GetXaxis()->SetTitle("RF Time (tdc trig 4)");
   hRF_hodomult->GetYaxis()->SetTitle("fmod(RF Time - Hodoscope tmean clus1 - clus2, 4.008) [ns]");
   hRF_hodomult->Draw("colz");
@@ -369,4 +369,7 @@ void RFSearch(){
   hRF_GR_Hodo_Trig->GetYaxis()->SetTitle("fmod(RF Time - Hodoscope tmean bar1 - bar2, 4.008) [ns]");
   hRF_GR_Hodo_Trig->Draw("colz");
   //c3->Close();
+  */
+  hRF_Trig->Draw("colz");
+  
 }
