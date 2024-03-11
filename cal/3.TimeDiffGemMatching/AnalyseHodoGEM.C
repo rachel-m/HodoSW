@@ -23,22 +23,23 @@
 #include <sstream>
 #include <TStopwatch.h>
 
-#include "GEnTree.C"
+#include "SBSTree.C"
 
 using namespace std;
 
 // options
-const Bool_t   ApplyFidu  = true;
+const Bool_t   ApplyFidu  = true; //true
 const Bool_t   ApplyElas  = true;
-const Bool_t   ApplyElec  = true;
+const Bool_t   ApplyElec  = true; //true
 const Bool_t   ApplyPion  = false;
 const Bool_t   Apply1Bar  = false;
+const Bool_t   ApplySpotCut = false;
 
 const Bool_t   PlotHodo   = true;
-const Bool_t   PlotBBCal  = true;
-const Bool_t   PlotHCal   = true;
-const Bool_t   PlotKine   = true;
-const Bool_t   PlotOptics = true;
+const Bool_t   PlotBBCal  = false;
+const Bool_t   PlotHCal   = false;
+const Bool_t   PlotKine   = false;
+const Bool_t   PlotOptics = false;
 const Bool_t   PlotDiff   = true;
 
 void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TString Target = "H2"){
@@ -54,43 +55,31 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
   
   //SET ROOTFILE DIRECTORY
   TString Rootfile_Dir, Base_Dir, Pass_Dir;
-  //Base_Dir = Form("/volatile/halla/sbs/gpenman/rootfiles/%s",Exp.Data()); //general path for gen/gmn files
-  //Pass_Dir = Form("%s/%s%d",Exp.Data(),Exp.Data(),kin_no); //general path for production files
+  //Rootfile_Dir = Form("/volatile/halla/sbs/sbs-gen/GEN_REPLAYS/Rootfiles/pass1/GEN%i/%s/rootfiles/",kin_no,Target.Data());
+  Rootfile_Dir = "/volatile/halla/sbs/gpenman/GEN_REPLAY/rootfiles/";
+  //Rootfile_Dir = "/volatile/halla/sbs/gpenman/rootfiles/";
   
-  
-  //SET ROOTFILE DIRECTORY AT GLASGOW FOR HODOCALIB STUFF
-  Base_Dir = "/w/work5/home/garyp/sbs/rootfiles/GEn/hodocalib/"; //hodocalib path at glasgow
-  //Pass_Dir = "uncalib/"; //raw hodo calib files
-  //Pass_Dir = "TWcalib/"; //timewalk calibrated hodo files
-  Pass_Dir = "GEMcalib/"; //timewalk + gem track calibrated hodo fifles
-  Rootfile_Dir = Base_Dir + Pass_Dir;
-  //////////////////////////////////
-  
-
   if (Exp == "GEN"){
     if (Target == "H2"){
       cout << "Target is H2 Reference Cell" << endl;
-      //Rootfile_Dir = Base_Dir + Pass_Dir + "H2";
     }
     else if (Target == "He3"){
       cout << "Target is He3 Production Cell" << endl;
-      //Rootfile_Dir = Base_Dir + Pass_Dir + "He3";
     }
   }
   else if (Exp == "GMN"){
     if (Target == "LH2"){
       cout << "Target is LH2 Cryo" << endl;
-      //Rootfile_Dir = Base_Dir + Pass_Dir + "LH2";
     }
     else if (Target == "LD2"){
       cout << "Target is LD2 Cryo" << endl;
-      //Rootfile_Dir = Base_Dir + Pass_Dir + "LD2";
     }
   }
   else{
     cout << "Target doesn't make sense. Try harder." << endl;
     exit(1);
   }
+  
   
   gSystem->Setenv("ROOTFILE_DIR",Rootfile_Dir);  
   
@@ -117,11 +106,7 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
   nxsig = 0.78;
   pxmean = -2.38;
   pxsig = 0.63;
-  //Double_t nxcut = sqrt(pow(ymean/ysig,2) + pow(nxmean/nxsig,2));
-  //Double_t pxcut = sqrt(pow(ymean/ysig,2) + pow(pxmean/pxsig,2));
-  Double_t nxcut = 1;
-  Double_t pxcut = 1;
-
+  
   W_min   = 0.0; 
   W_max   = 4.0; 
   W_minc = 0.25;
@@ -137,15 +122,15 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
     sh_max = 1.0;
     ps_min = 0.1;
     
+    C->Add("$ROOTFILE_DIR/e1209016_fullreplay_*.root");
+      
     if( kin_no == 1) { //GEN-1
-      C->Add("$ROOTFILE_DIR/e1209016_fullreplay_*.root");
       Eb = 2.200;
       th_bb = 47.5;
       th_sbs = 34.7;
     }  
     else if( kin_no == 2) { //GEN-2
-      C->Add("$ROOTFILE_DIR/e1209016_fullreplay_*.root");
-      Eb = 4.288;
+      Eb = 4.291;
       th_bb = 29.5;
       th_sbs = 34.7;
 
@@ -153,14 +138,12 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
       pxsig = 0.304931;
     }
     else if( kin_no == 3) { //GEN-3
-      C->Add("$ROOTFILE_DIR/e1209016_fullreplay*.root");
-      Eb = 6.600;
+      Eb = 6.373;
       th_bb = 35.9;
       th_sbs = 22.1;
     }
     else if( kin_no == 4) { //GEN-4
-      C->Add("$ROOTFILE_DIR/e1209016_fullreplay_*.root");
-      Eb = 8.800;
+      Eb = 8.448;
       th_bb = 35.0;
       th_sbs = 18.0;
     }
@@ -389,9 +372,9 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
       //production
       //C->Add("$ROOTFILE_DIR/LH2/e1209019_fullreplay_13486_stream0_seg8*.root");
       //    C->Add("$ROOTFILE_DIR/LH2/e1209019_fullreplay_13486*.root"); 
-
+      
       C->Add("$ROOTFILE_DIR/../e1209019_fullreplay_13486*.root");
-
+      
       run_no = 13486;
     
       //sbs magnet off
@@ -519,6 +502,13 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
     }
   }
   //End of setting kinematics
+  
+  //Double_t nxcut = sqrt(pow(ymean/ysig,2) + pow(nxmean/nxsig,2));
+  //Double_t pxcut = sqrt(pow(ymean/ysig,2) + pow(pxmean/pxsig,2));
+  Double_t cut_sigma = 3;
+  Double_t nxcut = cut_sigma * nxsig;
+  Double_t pxcut = cut_sigma * pxsig;
+  Double_t ycut = cut_sigma * ysig;
 
   const Double_t Mp = 0.938272; //proton mass (gev/c2)
   const Double_t Mn = 0.939565; //neutron mass (gev/c2)
@@ -527,9 +517,9 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
   cout << "pcent = " << pcent << endl;
   cout << "pdiffcut = " << pdiffcut << endl;
   
-  GEnTree* T = new GEnTree(C);  
+  SBSTree* T = new SBSTree(C);  
   Long64_t nentries = C->GetEntries();
-  //nentries = 1000000;
+  //nentries = 5000000;
 
   if(nentries == 0){
     cout << gSystem->Getenv("ROOTFILE_DIR") << " appears to be empty. Check files and/or paths." << endl;
@@ -537,7 +527,6 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
   }
   
   TFile *outfile = new TFile(Form("AnaOut_%s%i_%s.root",Exp.Data(),kin_no,Target.Data()),"RECREATE");
-  //TFile *outfile = new TFile(Form("TEST_%s_%i.root",Target.Data(),kin_no),"RECREATE");
   
   gStyle->SetOptFit(0);
   gStyle->SetOptTitle(0);
@@ -571,15 +560,6 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
 
   gStyle->SetStripDecimals(kFALSE);
   
-  //kinematic histo defs
-  //TH1D* hQ2 = new TH1D("hQ2","",50,0,12);
-  //TH1D* hW2 = new TH1D("hW2","",50,0,12);
-  //TH1D* hEpsilon = new TH1D("hEpsilon","",50,0,12);
-  //TH1D* hXbj = new TH1D("hXbj","",50,0,12);
-  //TH1D* hNu = new TH1D("hNu","",50,0,12);
-  
-  //TH2D* hWvP = new TH2D("hWvP","",50,0,4,50,-2,0.5);
-
   //hodo histo defs
   TH1D* hth_tmult   = new TH1D("hth_tmult","",6,0,6);
   TH1D* hth_hmult   = new TH1D("hth_cmult","",6,0,6);
@@ -600,8 +580,10 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
   TH2D* hth2d_tdiff  = new TH2D("hth2d_tdiff","",100,-100.,100.,90,0,90);
   TH2D* hth2d_tmean  = new TH2D("hth2d_tmean","",100,-20.,20.,90,0,90);
   TH2D* hth2d_Diff   = new TH2D("hth2d_Diff", "", 50, -0.35, 0.35, 50, -5., 5. );
-
   
+  TH2D* hth2d_ydiff_c  = new TH2D("hth2d_ydiff_c","",20,-0.16,0.16,90,0,90);
+  
+  //hodo fadc (if wanted)
   TH2D* hth2d_fadcr1  = new TH2D("hth2d_fadcr1","",125,0.,250.,32,0,32);
   TH2D* hth2d_fadcr2  = new TH2D("hth2d_fadcr2","",125,0.,250.,32,0,32);
   TH2D* hth2d_fadcl1  = new TH2D("hth2d_fadcl1","",125,0.,250.,32,0,32);
@@ -611,89 +593,11 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
   TH1D* hth_fadcr1    = new TH1D("hth_fadcr1","",125,0.,250.);
   TH1D* hth_fadcr2    = new TH1D("hth_fadcr2","",125,0.,250.);
   
-  
-  //kinematic histo defs
-  //TH1D* hkin_p        = new TH1D("hkin_p","",100,0.25*pcent,1.25*pcent);
-  //TH1D* hkin_th       = new TH1D("hkin_th","",100,-0.3,0.3);
-  //TH1D* hkin_ph       = new TH1D("hkin_ph","",100,-0.1,0.1);
-  //TH1D* hkin_x        = new TH1D("hkin_x","",100,-1.0,1.0);
-  //TH1D* hkin_y        = new TH1D("hkin_y","",100,-0.4,0.4);
-  //TH1D* hkin_yt       = new TH1D("hkin_yt","",100,-0.15,0.15);
-  //TH1D* hkin_pdiff    = new TH1D("hkin_pdiff","",50,-1.5,1.5);
-  //TH1D* hkin_W        = new TH1D("hkin_W","",50,W_min,W_max);
-  //TH2D* hkin2d_thp    = new TH2D("hkin2d_thp","",100, th_bb-6,th_bb+6.,100,0.25*pcent,1.25*pcent);
-  
-  //TH1D* hkin_pc       = new TH1D("hkin_pc","",100,0.25*pcent,1.25*pcent);
-  //TH1D* hkin_thc      = new TH1D("hkin_thc","",100,-0.3,0.3);
-  //TH1D* hkin_phc      = new TH1D("hkin_phc","",100,-0.1,0.1);
-  //TH1D* hkin_xc       = new TH1D("hkin_xc","",100,-1.0,1.0);
-  //TH1D* hkin_yc       = new TH1D("hkin_yc","",100,-0.4,0.4);
-  //TH1D* hkin_ytc      = new TH1D("hkin_ytc","",100,-0.15,0.15);
-  //TH1D* hkin_pdiffc   = new TH1D("hkin_pdiffc","",50,-1.5,1.5);
-  //TH1D* hkin_Wc       = new TH1D("hkin_Wc","",50,W_min,W_max);
-  //TH2D* hkin2d_thpc    = new TH2D("hkin2d_thpc","",100, th_bb-6,th_bb+6.,100,0.25*pcent,1.25*pcent);
-  
-  //bbcal energy and position histo defs
-  //TH1D *hbbcal_psE    = new TH1D("hbbcal_psE","",100,0,1.25*pcent/2.); 
-  //TH1D *hbbcal_shE    = new TH1D("hbbcal_shE","",100,0,1.25*pcent); 
-  //TH1D* hbbcal_cale   = new TH1D("hbbcal_cale","",100,0.25*pcent,1.25*pcent);
-  //TH1D* hbbcal_edivp  = new TH1D("hbbcal_edivp","",100,-1.0,1.0);
-  //TH1D* hbbcal_xdiff  = new TH1D("hbbcal_xdiff","",100,-0.2,0.2);
-  //TH1D* hbbcal_ydiff  = new TH1D("hbbcal_ydiff","",100,-0.2,0.2);
-  //TH2D *hbbcal2d_pss  = new TH2D("hbbcal2d_pssh","",100,0.,1.2, 100,0.,1.2); 
-  
-  //TH1D *hbbcal_psEc   = new TH1D("hbbcal_psEc","",100,0,1.25*pcent/2.); 
-  //TH1D *hbbcal_shEc   = new TH1D("hbbcal_shEc","",100,0,1.25*pcent); 
-  //TH1D* hbbcal_calec  = new TH1D("hbbcal_calec","",100,0.25*pcent,1.25*pcent);
-  //TH1D* hbbcal_edivpc = new TH1D("hbbcal_edivpc","",100,-1.0,1.0);
-  //TH1D* hbbcal_xdiffc = new TH1D("hbbcal_xdiffc","",100,-0.2,0.2);
-  //TH1D* hbbcal_ydiffc = new TH1D("hbbcal_ydiffc","",100,-0.2,0.2);
-  //TH2D *hbbcal2d_pssc  = new TH2D("hbbcal2d_psshc","",100,0.,1.2, 100,0.,1.2); 
-  
-  //TH2D* hhcal_xbb   = new TH2D("hhcal_xbb","",100,-1.2,1.2,100,-1.2,1.2);
-  //TH2D* hhcal_ybb   = new TH2D("hhcal_ybb","",100,-0.3,0.3,100,-0.3,0.3);
-  //TH1D* hhcal_xdiff = new TH1D("hhcal_xdiff","",100,-1.2,1.2);
-  //TH1D* hhcal_ydiff = new TH1D("hhcal_ydiff","",100,-1.2,1.2);
-  //TH1D* hhcal_xdiffc = new TH1D("hhcal_xdiffc","",100,-1.2,1.2);
-  //TH1D* hhcal_xdiffcW = new TH1D("hhcal_xdiffcW","",100,-1.2,1.2);
-  //TH1D* hhcal_ydiffc = new TH1D("hhcal_ydiffc","",100,-1.2,1.2);
-
-  //hcal position histo defs
-  //TH1D* hhcal_x = new TH1D("hhcal_x","",100,-2.5,2.5);
-  //TH1D* hhcal_y = new TH1D("hhcal_y","",100,-4.,4.);
-  //TH2D* hhcal_xy = new TH2D("hhcal_xy","",100,-2.,2.,100,-2.5,1.);
-  //TH1D* hhcal_predx = new TH1D("hhcal_predx","",100,-2.5,2.5);
-  //TH1D* hhcal_predy = new TH1D("hhcal_predy","",100,-4.,4.);
-  //TH2D* hhcal_predxy = new TH2D("hhcal_predxy","",100,-2.,2.,100,-2.,2.);
+  //hcal dx,dy (if wanted)
   TH1D* hhcal_dx = new TH1D("hhcal_dx","",100,-4,4);
   TH1D* hhcal_dy = new TH1D("hhcal_dy","",100,-10,10);
   TH2D* hhcal_dxy = new TH2D("hhcal_dxy","",100,-10,10,100,-4,4);
   
-  //TH1D* hhcal_xc = new TH1D("hhcal_xc","",100,-2.5,2.5); 
-  //TH1D* hhcal_yc = new TH1D("hhcal_yc","",100,-2.,2.); 
-  //TH2D* hhcal_xyc = new TH2D("hhcal_xyc","",100,-2.,2.,100,-2.5,1.);
-  //TH1D* hhcal_predxc = new TH1D("hhcal_predxc","",100,-2.5,2.5);
-  //TH1D* hhcal_predyc = new TH1D("hhcal_predyc","",100,-4.,4.);
-  //TH2D* hhcal_predxyc = new TH2D("hhcal_predxyc","",100,-2.,2.,100,-2.,2.);
-  TH1D* hhcal_dxc = new TH1D("hhcal_dxc","",100,-4,4);
-  TH1D* hhcal_dyc = new TH1D("hhcal_dyc","",100,-10,10);
-  TH2D* hhcal_dxyc = new TH2D("hhcal_dxyc","",100,-10,10,100,-4,4);
-  
-  TH2D* hkin_dxyc = new TH2D("hkin_dxyc","",100,-4,4,100,-4,4);
-  
-  //TH1D* hbbcal_pxdiff = new TH1D("hbbcal_pxdiff","",100,-0.5,0.5);
-  //TH1D* hbbcal_pydiff = new TH1D("hbbcal_pydiff","",100,-0.5,0.5);
-  //TH1D* hbbcal_pzdiff = new TH1D("hbbcal_pzdiff","",100,-0.5,0.5);
-  
-  //TH2D* hhcalsh_blkdiff = new TH2D("hhcalbbsh_blkdiff","",5,0,5,5,0,5);
-  //TH2D* hhcalps_blkdiff = new TH2D("hhcalbbps_blkdiff","",5,0,5,5,0,5);
-  
-   //Asymmetry Plots
-  //TH1D* hneutron_dx_hplus = new TH1D("hneutron_dx_hplus","",50,-4,4);
-  //TH1D* hneutron_dx_hminus = new TH1D("hneutron_dx_hminus","",50,-4,4);
-  //TH1D* hproton_dx_hplus = new TH1D("hproton_dx_hplus","",50,-4,4);
-  //TH1D* hproton_dx_hminus = new TH1D("hproton_dx_hminus","",50,-4,4);
-
   //optics histo defs
   TH2D* hopt_x_pd     = new TH2D("hopt_x_pd","",  20,-0.8,0.8,   20,-0.1, +0.1);
   TH2D* hopt_y_pd     = new TH2D("hopt_y_pd","",  20,-0.3,0.3,   20,-0.1, +0.1);
@@ -748,8 +652,8 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
     hDiffshE[i] = new TH2D(Form("hDiffshE_%d",i), "", 50, 0.0, 2.0, 50, -7., 7. );
     hDiffpsE[i] = new TH2D(Form("hDiffpsE_%d",i), "", 50, 0.0, 2.0, 50, -7., 7. );
 
-//     hMean[i]   = new TH2D(Form("hMean_%d",i), "", 50, 0.25*pcent,1.25*pcent, 50, -12., 12. );
-//     hMeanc[i]  = new TH2D(Form("hMeanc_%d",i), "", 50, 0.25*pcent,1.25*pcent, 50, -12., 12. );
+    //hMean[i]   = new TH2D(Form("hMean_%d",i), "", 50, 0.25*pcent,1.25*pcent, 50, -12., 12. );
+    //hMeanc[i]  = new TH2D(Form("hMeanc_%d",i), "", 50, 0.25*pcent,1.25*pcent, 50, -12., 12. );
 
     hMean[i]   = new TH2D(Form("hMean_%d",i), "", 50, -12., 12., 50, -12., 12. );
     hMeanc[i]  = new TH2D(Form("hMeanc_%d",i), "", 50, -12., 12., 50, -12., 12. );
@@ -806,15 +710,24 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
   vector<Double_t> bbth_vscint;
   vector<Double_t> bbth_tdiffoffset;
   
-  Int_t linenum=0;
+  Int_t linenum = 0;
   string line;
   
+  //the following lines were for a test of different kinematic
+  //parameters on other kinematic datasets
+  //i.e. how would gen3 look like with gen2 offsets
+  Int_t vscint_no = kin_no;
+  //vscint_no = 2;
+  Int_t tdiff_no = kin_no;
+  //tdiff_no = 3;
+  TString calib_tar = Target;
+  //calib_tar = "H2";
+  
   fstream vscintfile;
-  vscintfile.open("vscint_2.txt",ios::in);
+  vscintfile.open(Form("vscint_%s_%d.txt",calib_tar.Data(),vscint_no),ios::in);
   if(!vscintfile.is_open()){
     cout << "vscint file not found, defaulting to gmn4 values." << endl;
     bbth_vscint = default_vscint;
-    //exit(1);
   }else
     while(getline(vscintfile,line)){
       if(linenum>0){
@@ -827,11 +740,10 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
 
   linenum=0;
   fstream tdifffile;
-  tdifffile.open("tdiff_2.txt",ios::in);
+  tdifffile.open(Form("tdiff_%s_%d.txt",calib_tar.Data(),tdiff_no),ios::in);
   if(!tdifffile.is_open()){
     cout << "tdiff file not found, defaulting to gmn4 values." << endl;
     bbth_tdiffoffset = default_tdiff;
-    //exit(1);
   }else
     while(getline(tdifffile,line)){
       if(linenum>0){
@@ -844,35 +756,10 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
   
   ////////////////////////////////////////////////////////
   //Data loop
-  //Double_t realIHWP = 0;
-  //int prevRun = -1;
-  //int curRun;
-  //int tempev;
   cout << "Processing " << nentries << " events." << endl;
   for(Long64_t ev=0; ev<nentries;ev++) {
     
-    //if (ev != 0) prevRun = T->fEvtHdr_fRun;
-    
     T->GetEntry(ev);
-    //curRun = T->fEvtHdr_fRun;
-    
-    //Double_t tempIHWP;
-    
-    /*
-    if (prevRun != curRun){
-      cout << "New Run, " << curRun << ", recalibrating the IHWP." << endl;
-      tempev = ev;
-      tempIHWP = T->IGL1I00OD16_16; //half wave plate in/out
-      while(fabs(tempIHWP) != 1){
-	tempev++;
-	T->GetEntry(tempev);
-	tempIHWP = T->IGL1I00OD16_16;
-      }
-      cout << "realistic IHWP value of " << tempIHWP << " found, resuming analysis" << endl;
-    }
-    
-    Double_t IHWP = tempIHWP;
-    */
     
     if( ev%10000 == 0 )
       cout << ev << endl;
@@ -889,41 +776,21 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
     if (Target == "He3")
       if(fabs(T->bb_tr_vz[0]) > 0.27) continue;
     //if(T->fEvtHdr_fTrigBits != 1) continue;
-
-    /*
-    // Hodo fADCs (no cuts)
-    for(int i = 0 ; i < T->Ndata_bb_hodoadc_bar_adc_L_ap ; i++ ) {
-      hth2d_fadcl1->Fill(T->bb_hodoadc_bar_adc_L_ap[i], T->bb_hodoadc_bar_adc_id[i]);
-      hth_fadcl1->Fill(T->bb_hodoadc_bar_adc_L_ap[i]);
-    }
-    for(int i = 0 ; i < T->Ndata_bb_hodoadc_bar_adc_R_ap ; i++ ) {
-      hth2d_fadcr1->Fill(T->bb_hodoadc_bar_adc_R_ap[i], T->bb_hodoadc_bar_adc_id[i]);
-      hth_fadcr1->Fill(T->bb_hodoadc_bar_adc_R_ap[i]);
-    }
-    */
     
     // Kinematic cuts
-    Double_t th  = acos(T->bb_tr_pz[0]/T->bb_tr_p[0]); //theta in the lab
-    Double_t th1 = T->bb_tr_th[0]; //theta in the transport system.
-    Double_t th2 = T->bb_tr_px[0] / T->bb_tr_pz[0]; //gradient
+    Double_t th_lab  = acos(T->bb_tr_pz[0]/T->bb_tr_p[0]); //theta in the lab (global hall coords)
+    Double_t th_transport = T->bb_tr_th[0]; //theta in the transport system.
+    Double_t th_gradient = T->bb_tr_px[0] / T->bb_tr_pz[0]; //gradient
     
-
-    //Double_t pexp_th2 = 2.*Mp*Eb*(Mp+Eb)*cos(th) / (Mp*Mp + 2.*Mp*Eb + (Eb*sin(th)*Eb*sin(th))); // e mom from angle
-    Double_t pexp_th = Eb / (1.0 + Eb/Mp*(1.0-cos(th)));
-    Double_t p       = T->bb_tr_p[0];
+    Double_t pexp_th = Eb / (1.0 + Eb/Mp*(1.0-cos(th_lab)));
+    Double_t p       = T->bb_tr_p[0]; //momentum variables are in global hall coords
     Double_t pdiff   = p - pexp_th; 
     
-    //cout << pdiff << endl;
-
     //pdiff = pdiff - pdiff_off;
     //pdiff = pdiff-0.07*T->bb_tr_x[0];
     //pdiff = pdiff-0.32*T->bb_tr_y[0];
     Double_t pc = p;
     
-    //Double_t px1 = pc * TMath::Sin( th_bb+T->bb_tr_tg_ph[0] ) * TMath::Cos( T->bb_tr_tg_th[0] );
-    //Double_t py1 = pc * TMath::Sin( th_bb+T->bb_tr_tg_ph[0] ) * TMath::Sin( T->bb_tr_tg_th[0] );
-    //Double_t pz1 = pc * TMath::Cos( th_bb+T->bb_tr_tg_ph[0] );
-
     // _tg = target plane,  tr_ = local transport coord system (focal plane variables) 
     Double_t px = T->bb_tr_px[0];
     Double_t py = T->bb_tr_py[0];
@@ -932,20 +799,14 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
     Double_t vx = T->bb_tr_vx[0];
     Double_t vy = T->bb_tr_vy[0];
     Double_t vz = T->bb_tr_vz[0];
-
-    //hbbcal_pxdiff->Fill(px-px1);
-    //hbbcal_pydiff->Fill(py+py1);
-    //hbbcal_pzdiff->Fill(pz-pz1);
-    
-    //hhcalsh_blkdiff->Fill(T->Ndata_bb_sh_clus_blk_id,T->Ndata_sbs_hcal_clus_blk_id);
-    //hhcalps_blkdiff->Fill(T->Ndata_bb_ps_clus_blk_id,T->Ndata_sbs_hcal_clus_blk_id);
     
     kpp4.SetPxPyPzE(px,py,pz,pc);
     Qp4 = kp4 - kpp4;
     TVector3 qdir = Qp4.Vect().Unit();
     Rp4 = Tp4 + Qp4;
-    Double_t W2 = T->e_kine_W2;
-    //Double_t W2 = Rp4.M2(); 
+    Double_t W2_exp = T->e_kine_W2;
+    Double_t W2 = Rp4.M2(); 
+    cout << W2 - W2_exp << endl;
     
     Double_t trx_sh  = (T->bb_tr_x[0] + (show_dist) * T->bb_tr_th[0] );
     Double_t try_sh  = (T->bb_tr_y[0] + (show_dist) * T->bb_tr_ph[0] );
@@ -957,12 +818,6 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
 
     Double_t hcal_x = T->sbs_hcal_x;
     Double_t hcal_y = T->sbs_hcal_y;
-   
-    //My (old) Method
-    //Double_t pred_x = -(hcal_dist * TMath::Sin( hcal_ph ));
-    //Double_t pred_y = hcal_dist * TMath::Sin(hcal_th);
-    //Double_t dx = hcal_x - pred_x;
-    //Double_t dy = hcal_y - pred_y;
     
     //vertex corrections
     TVector3 vertex(0,0,vz);
@@ -984,49 +839,6 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
       if( fabs(T->bb_tr_tg_ph[0]) > phtg_cut ) continue;
       if( fabs(T->bb_tr_tg_y[0]) > ytg_cut ) continue;
     }
-
-    //hhcal_xdiff->Fill( trx_sh - T->sbs_hcal_y);
-    //hhcal_ydiff->Fill( try_sh - T->sbs_hcal_x);
-  
-    //hkin_p->Fill(p);
-    //hkin_x->Fill(T->bb_tr_x[0]);
-    //hkin_y->Fill(T->bb_tr_y[0]);
-    //hkin_th->Fill(T->bb_tr_tg_th[0]);
-    //hkin_ph->Fill(T->bb_tr_tg_ph[0]);
-    //hkin_yt->Fill(T->bb_tr_tg_y[0]);
-    //hkin_pdiff->Fill( pdiff );
-    //hkin_W->Fill(W2);
-    //hWvP->Fill(W2,pdiff);
-    //hkin2d_thp->Fill(TMath::RadToDeg()*th, p);
-
-    //hbbcal_psE->Fill( T->bb_ps_e );
-    //hbbcal_shE->Fill( T->bb_sh_e );
-    //hbbcal_cale->Fill((T->bb_ps_e + T->bb_sh_e));
-    //hbbcal_edivp->Fill(((T->bb_ps_e + T->bb_sh_e) - p));
-    //hbbcal_xdiff->Fill( T->bb_sh_x - trx_sh );
-    //hbbcal_ydiff->Fill( T->bb_sh_y - try_sh );
-    //hbbcal2d_pss->Fill( T->bb_sh_e/T->bb_tr_p[0], T->bb_ps_e/T->bb_tr_p[0] );
-    
-    
-    //hhcal_xbb->Fill( trx_sh,  T->sbs_hcal_x);
-    //hhcal_ybb->Fill( try_sh, T->sbs_hcal_y);
-    //hhcal_xdiffc->Fill( trx_sh - T->sbs_hcal_x);
-    //hhcal_ydiffc->Fill( try_sh - T->sbs_hcal_y);
-    
-    //hhcal_x->Fill(hcal_x);
-    //hhcal_y->Fill(hcal_y);
-    //hhcal_xy->Fill(hcal_y,hcal_x);
-    
-    //hhcal_predx->Fill(pred_x);
-    //hhcal_predy->Fill(pred_y);
-    //hhcal_predxy->Fill(pred_y,pred_x);
-    
-    //hhcal_dx->Fill(dx);
-    //hhcal_dy->Fill(dy);
-    //hhcal_dxy->Fill(dy,dx);
-    
-    //pxcut = 3. * pxsig;
-    //ycut = 3. * ysig;
     
     //electron cuts
     if( ApplyElec ) { 
@@ -1041,233 +853,182 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
       if( (T->bb_ps_e/T->bb_tr_p[0] + sh_e*T->bb_sh_e/T->bb_tr_p[0]) > sh_min ) continue;
     }
     
-    //elastic cuts
-    if (ApplyElas){
+    if( ApplyElas ) {
+      //if( fabs(pdiff) > pdiffcut ) continue;
+      if( W2 < W_minc ) continue; 
+      if( W2 > W_maxc ) continue;   
+      if( T->bb_tr_p[0] < 0.25*pcent ) continue;
+      if( fabs(dy-ymean) > ycut) continue;
+    }
+    
+    //nucleon spot cuts
+    if (ApplySpotCut){
       if(Target == "LD2" || Target == "He3"){
 	if( pow(dy - ymean,2)/pow(ysig,2)  +  pow(dx - nxmean,2)/pow(nxsig,2)  > pow(nxcut,2)   &&   pow(dy - ymean,2)/pow(ysig,2)  +  pow(dx - pxmean,2)/pow(pxsig,2) > pow(pxcut,2) ) continue;
       }else if(Target=="LH2" || Target == "H2"){
 	if(pow(dy - ymean,2)/pow(ysig,2)  +  pow(dx - pxmean,2)/pow(pxsig,2) > pow(pxcut,2)) continue;
       }
-      //if( T->bb_tr_p[0] < 0.25*pcent ) continue;
-      //if( T->bb_tr_p[0] < 2 ) continue;
-      if( W2 < W_minc ) continue; 
-      if( W2 > W_maxc ) continue;   
     }
 
-    //hkin_pdiffc->Fill( pdiff );
-     
-    //hkin_pc->Fill(pc);
-    //hkin_xc->Fill(T->bb_tr_x[0]);
-    //hkin_yc->Fill(T->bb_tr_y[0]);
-    //hkin_thc->Fill(T->bb_tr_tg_th[0]);
-    //hkin_phc->Fill(T->bb_tr_tg_ph[0]);
-    //hkin_ytc->Fill(T->bb_tr_tg_y[0]);
-    //hkin2d_thpc->Fill(TMath::RadToDeg()*th, pc);
-    //hkin_Wc->Fill(W2);
-    //hkin_dxyc->Fill(dy,dx);
-    
-    if( ApplyElas ) 
-      if( fabs(pdiff) > pdiffcut ) continue;
-    
-    /*
-    //Helicity Stuff + Hcal elastic spot cuts
-    Double_t Helicity = T->scalhel_hel; //helicity from tree
-    if (IHWP == 1) Helicity *= -1;
-    else Helicity *= 1;
+    if ( PlotOptics ){
+      hopt_x_pd->Fill(T->bb_tr_x[0] , pdiff);
+      hopt_y_pd->Fill(T->bb_tr_y[0] , pdiff);
+      hopt_xp_pd->Fill(T->bb_tr_th[0] , pdiff);
+      hopt_yp_pd->Fill(T->bb_tr_ph[0] , pdiff);
+      hopt_p_pd->Fill(p , pdiff);
+      hopt_th_pd->Fill(T->bb_tr_tg_th[0] , pdiff);
+      hopt_ph_pd->Fill(T->bb_tr_tg_ph[0] , pdiff);
+      hopt_yt_pd->Fill(T->bb_tr_tg_y[0] , pdiff);
       
-    //cut on neutron spot
-    if( pow(dy - ymean,2)/pow(ysig,2)  +  pow(dx - nxmean,2)/pow(nxsig,2)  <= pow(nxcut,2)){
-      if (Helicity == 1) hneutron_dx_hplus->Fill(dx);
-      else if (Helicity == -1) hneutron_dx_hminus->Fill(dx);
-      //cut on proton spot
-    }else if(pow(dy - ymean,2)/pow(ysig,2)  +  pow(dx - pxmean,2)/pow(pxsig,2)  < pow(pxcut,2)){
-      if (Helicity == 1) hproton_dx_hplus->Fill(dx);
-      else if (Helicity == -1) hproton_dx_hminus->Fill(dx);
+      hopt_x_pc->Fill(T->bb_tr_x[0] , p);
+      hopt_y_pc->Fill(T->bb_tr_y[0] , p);
+      hopt_xp_pc->Fill(T->bb_tr_th[0] , p);
+      hopt_yp_pc->Fill(T->bb_tr_ph[0] , p);
+      hopt_p_pc->Fill(p , p);
+      hopt_th_pc->Fill(T->bb_tr_tg_th[0] , p);
+      hopt_ph_pc->Fill(T->bb_tr_tg_ph[0] , p);
+      hopt_yt_pc->Fill(T->bb_tr_tg_y[0] , p);
     }
-    */
-    
-    //hhcal_xc->Fill(hcal_x);
-    //hhcal_yc->Fill(hcal_y);
-    //hhcal_xyc->Fill(hcal_y,hcal_x);
-    
-    //hhcal_predxc->Fill(pred_x);
-    //hhcal_predyc->Fill(pred_y);
-    //hhcal_predxyc->Fill(pred_y,pred_x);
-    
-    //hhcal_dxc->Fill(dx);
-    //hhcal_dyc->Fill(dy);
-    //hhcal_dxyc->Fill(dy,dx);
-            
-    //hbbcal_psEc->Fill( T->bb_ps_e );
-    //hbbcal_shEc->Fill( T->bb_sh_e );
-    //hbbcal_calec->Fill((T->bb_ps_e + T->bb_sh_e));
-    //hbbcal_edivpc->Fill(((T->bb_ps_e + T->bb_sh_e) - pc));
-    //hbbcal_xdiffc->Fill( T->bb_sh_x - (T->bb_tr_x[0] + (show_dist) * T->bb_tr_th[0] ) ); 
-    //hbbcal_ydiffc->Fill( T->bb_sh_y - (T->bb_tr_y[0] + (show_dist) * T->bb_tr_ph[0] ) );
-    //hbbcal2d_pssc->Fill( T->bb_sh_e/T->bb_tr_p[0], T->bb_ps_e/T->bb_tr_p[0] );
-      
-    
-      if ( PlotOptics ){
-	hopt_x_pd->Fill(T->bb_tr_x[0] , pdiff);
-	hopt_y_pd->Fill(T->bb_tr_y[0] , pdiff);
-	hopt_xp_pd->Fill(T->bb_tr_th[0] , pdiff);
-	hopt_yp_pd->Fill(T->bb_tr_ph[0] , pdiff);
-	hopt_p_pd->Fill(p , pdiff);
-	hopt_th_pd->Fill(T->bb_tr_tg_th[0] , pdiff);
-	hopt_ph_pd->Fill(T->bb_tr_tg_ph[0] , pdiff);
-	hopt_yt_pd->Fill(T->bb_tr_tg_y[0] , pdiff);
-      
-	hopt_x_pc->Fill(T->bb_tr_x[0] , p);
-	hopt_y_pc->Fill(T->bb_tr_y[0] , p);
-	hopt_xp_pc->Fill(T->bb_tr_th[0] , p);
-	hopt_yp_pc->Fill(T->bb_tr_ph[0] , p);
-	hopt_p_pc->Fill(p , p);
-	hopt_th_pc->Fill(T->bb_tr_tg_th[0] , p);
-	hopt_ph_pc->Fill(T->bb_tr_tg_ph[0] , p);
-	hopt_yt_pc->Fill(T->bb_tr_tg_y[0] , p);
-      }
       
       
       
-      // GEM-Hodoscope track matching
-      if ( PlotHodo ){
-	hth_tx->Fill( T->bb_tr_x[0] + hodo_dist * T->bb_tr_th[0] ); // track x at hodo (dispersive)
-	hth_ty->Fill( T->bb_tr_y[0] + hodo_dist * T->bb_tr_ph[0] ); // track y at hodo (non-dispersive)
+    // GEM-Hodoscope track matching
+    if ( PlotHodo ){
+      hth_tx->Fill( T->bb_tr_x[0] + hodo_dist * T->bb_tr_th[0] ); // track x at hodo (dispersive)
+      hth_ty->Fill( T->bb_tr_y[0] + hodo_dist * T->bb_tr_ph[0] ); // track y at hodo (non-dispersive)
       
-	hth2d_txy->Fill( T->bb_tr_y[0] + hodo_dist * T->bb_tr_ph[0], T->bb_tr_x[0] + hodo_dist * T->bb_tr_th[0] );
+      hth2d_txy->Fill( T->bb_tr_y[0] + hodo_dist * T->bb_tr_ph[0], T->bb_tr_x[0] + hodo_dist * T->bb_tr_th[0] );
       
-	hth_tmult->Fill(T->bb_tr_n-1); // BB track "id" 
+      hth_tmult->Fill(T->bb_tr_n-1); // BB track "id" 
       
-	Bool_t Singlebarhit = kFALSE;
-	if( T->bb_hodotdc_clus_size[0] == 1 && T->bb_hodotdc_clus_trackindex[0] == 0 )
-	  Singlebarhit = kTRUE;
+      Bool_t Singlebarhit = kFALSE;
+      if( T->bb_hodotdc_clus_size[0] == 1 && T->bb_hodotdc_clus_trackindex[0] == 0 )
+	Singlebarhit = kTRUE;
 	
-	if( Apply1Bar && !Singlebarhit ) continue;
+      if( Apply1Bar && !Singlebarhit ) continue;
     
-	if( T->bb_hodotdc_clus_trackindex[0] == 0 ) {  // only hodo clusters that match bb track id = 0 (I guess redundndat for single track events)	
+      if( T->bb_hodotdc_clus_trackindex[0] == 0 ) {  // only hodo clusters that match bb track id = 0 (I guess redundndat for single track events)	
       
-	  hth_csize->Fill( T->bb_hodotdc_clus_size[0] );
-	  hth_hmult->Fill( T->bb_hodotdc_clus_trackindex[0] ); // track id that is matched
+	hth_csize->Fill( T->bb_hodotdc_clus_size[0] );
+	hth_hmult->Fill( T->bb_hodotdc_clus_trackindex[0] ); // track id that is matched
       
-	  hth_xmean->Fill( T->bb_hodotdc_clus_xmean[0] ); // mean x position of hodo cluster
-	  hth_xdiff->Fill( (T->bb_hodotdc_clus_xmean[0] - (T->bb_tr_x[0] + hodo_dist * T->bb_tr_th[0])) );
+	hth_xmean->Fill( T->bb_hodotdc_clus_xmean[0] ); // mean x position of hodo cluster
+	hth_xdiff->Fill( (T->bb_hodotdc_clus_xmean[0] - (T->bb_tr_x[0] + hodo_dist * T->bb_tr_th[0])) );
       
-	  hth_ymean->Fill( T->bb_hodotdc_clus_ymean[0] ); // mean y position of hodo cluster
-	  hth_ydiff->Fill( (T->bb_hodotdc_clus_ymean[0] - (T->bb_tr_y[0] + hodo_dist * T->bb_tr_ph[0])) );
+	hth_ymean->Fill( T->bb_hodotdc_clus_ymean[0] ); // mean y position of hodo cluster
+	hth_ydiff->Fill( (T->bb_hodotdc_clus_ymean[0] - (T->bb_tr_y[0] + hodo_dist * T->bb_tr_ph[0])) );
 	  
-	  Int_t maxbar = (Int_t)T->bb_hodotdc_clus_id[0]; 
+	Int_t maxbar = (Int_t)T->bb_hodotdc_clus_id[0]; 
 	  
-	  hth2d_xdiff->Fill( (T->bb_hodotdc_clus_xmean[0] - (T->bb_tr_x[0] + hodo_dist * T->bb_tr_th[0])), maxbar );
-	  hth2d_ydiff->Fill( (T->bb_hodotdc_clus_ymean[0] - (T->bb_tr_y[0] + hodo_dist * T->bb_tr_ph[0])), maxbar );
-	  hth2d_tmean->Fill( T->bb_hodotdc_clus_tmean[0], maxbar );
+	//g. penman 4.10.23 
+	//added corrected ymean using vscint and tdiff0
+	//this means we can re-run the script to see the effect of 
+	//calibrations on ydiff plot
+	//instead of doing a full new replay
+	Double_t ymean_corr = -0.5 * (T->bb_hodotdc_clus_tdiff[0] - bbth_tdiffoffset[maxbar]) * bbth_vscint[maxbar];
+	//cout << T->bb_hodotdc_clus_ymean[0] << " " << ymean_corr << endl;
+	hth2d_ydiff_c->Fill( (ymean_corr - (T->bb_tr_y[0] + hodo_dist * T->bb_tr_ph[0])), maxbar );
+	//////
+	  
+	hth2d_xdiff->Fill( (T->bb_hodotdc_clus_xmean[0] - (T->bb_tr_x[0] + hodo_dist * T->bb_tr_th[0])), maxbar );
+	hth2d_ydiff->Fill( (T->bb_hodotdc_clus_ymean[0] - (T->bb_tr_y[0] + hodo_dist * T->bb_tr_ph[0])), maxbar );
+	hth2d_tmean->Fill( T->bb_hodotdc_clus_tmean[0], maxbar );
 
-	  hth2d_xymean->Fill( T->bb_hodotdc_clus_ymean[0], T->bb_hodotdc_clus_xmean[0] );
+	hth2d_xymean->Fill( T->bb_hodotdc_clus_ymean[0], T->bb_hodotdc_clus_xmean[0] );
       
-	  hth2d_Diff->Fill((T->bb_tr_y[0] + hodo_dist * T->bb_tr_ph[0]), 0.5*T->bb_hodotdc_clus_tdiff[0] ); // note th 1/2
+	hth2d_Diff->Fill((T->bb_tr_y[0] + hodo_dist * T->bb_tr_ph[0]), 0.5*T->bb_hodotdc_clus_tdiff[0] ); // note the 1/2
 	
-	  //Double_t HorizPos = -0.5 * (bartimediff-ftDiff0.at(BarInc)) * fvScint.at(BarInc); // position from L based on timediff and in m. 
+	//Double_t HorizPos = -0.5 * (bartimediff-ftDiff0.at(BarInc)) * fvScint.at(BarInc); // position from L based on timediff and in m. 
 
-	  //(-2*y/vscint) + tdiff0  =(bartimediff
-	  Double_t tdiff_corr = T->bb_hodotdc_clus_tdiff[0] + (2./bbth_vscint[maxbar]*(T->bb_tr_y[0] + hodo_dist * T->bb_tr_ph[0])) - bbth_tdiffoffset[maxbar];
-	  //	Double_t tdiff_corr = T->bb_hodotdc_clus_tdiff[0] + (2./bbth_vscint[maxbar]*(T->bb_tr_y[0] + hodo_dist * T->bb_tr_ph[0])) - bbth_tdiffoffset[maxbar];
-	  //	Double_t tdiff_corr = 2 * ( 0.5*T->bb_hodotdc_clus_tdiff[0] + 1./bbth_vscint[maxbar]*(T->bb_tr_y[0] + hodo_dist * T->bb_tr_ph[0]) - bbth_tdiffoffset[maxbar]);
+	//(-2*y/vscint) + tdiff0  =(bartimediff
+	Double_t tdiff_corr = T->bb_hodotdc_clus_tdiff[0] + (2./bbth_vscint[maxbar]*(T->bb_tr_y[0] + hodo_dist * T->bb_tr_ph[0])) - bbth_tdiffoffset[maxbar];
+	//Double_t tdiff_corr = T->bb_hodotdc_clus_tdiff[0] + (2./bbth_vscint[maxbar]*(T->bb_tr_y[0] + hodo_dist * T->bb_tr_ph[0])) - bbth_tdiffoffset[maxbar];
+	//Double_t tdiff_corr = 2 * ( 0.5*T->bb_hodotdc_clus_tdiff[0] + 1./bbth_vscint[maxbar]*(T->bb_tr_y[0] + hodo_dist * T->bb_tr_ph[0]) - bbth_tdiffoffset[maxbar]);
 
-	  hDiff[maxbar]->Fill((T->bb_tr_y[0] + hodo_dist * T->bb_tr_ph[0]), 0.5*T->bb_hodotdc_clus_tdiff[0] ); // note th 1/2
-	  hDiffc[maxbar]->Fill( (T->bb_tr_y[0] + hodo_dist * T->bb_tr_ph[0]) , tdiff_corr ); 
-	  //	hDiffp[maxbar]->Fill( T->bb_tr_p[0] , tdiff_corr ); 
-	  hDiffp[maxbar]->Fill( T->bb_tr_th[0] , tdiff_corr ); 
-	  hDiffE[maxbar]->Fill((T->bb_ps_e + T->bb_sh_e)  , tdiff_corr ); 	
-	  hDiffshE[maxbar]->Fill((T->bb_sh_e)  , tdiff_corr ); 	
-	  hDiffpsE[maxbar]->Fill((T->bb_ps_e)  , tdiff_corr ); 	
+	hDiff[maxbar]->Fill((T->bb_tr_y[0] + hodo_dist * T->bb_tr_ph[0]), 0.5*T->bb_hodotdc_clus_tdiff[0] ); // note th 1/2
+	hDiffc[maxbar]->Fill( (T->bb_tr_y[0] + hodo_dist * T->bb_tr_ph[0]) , tdiff_corr ); 
+	//hDiffp[maxbar]->Fill( T->bb_tr_p[0] , tdiff_corr ); 
+	hDiffp[maxbar]->Fill( T->bb_tr_th[0] , tdiff_corr ); 
+	hDiffE[maxbar]->Fill((T->bb_ps_e + T->bb_sh_e)  , tdiff_corr ); 	
+	hDiffshE[maxbar]->Fill((T->bb_sh_e)  , tdiff_corr ); 	
+	hDiffpsE[maxbar]->Fill((T->bb_ps_e)  , tdiff_corr ); 	
 	  
-	  //float bbtrig0 = -999.;
-	  //float bbtrig1 = -999.;
-	  //float bbtrig2 = -999.;
-	  //float bbtrig3 = -999.;
-	  //float bbtrig4 = -999.;
-	  //float bbtrig5 = -999.;
+	//float bbtrig0 = -999.;
+	//float bbtrig1 = -999.;
+	//float bbtrig2 = -999.;
+	//float bbtrig3 = -999.;
+	//float bbtrig4 = -999.;
+	//float bbtrig5 = -999.;
 
-	  /*
+	/*
 	  for(int i = 0 ; i < T->Ndata_bb_tdctrig_tdcelemID ; i++ ) {
 
-	    int elem = T->bb_tdctrig_tdcelemID[i];
+	  int elem = T->bb_tdctrig_tdcelemID[i];
 
-	    //	  cout << elem << "\t" << T->bb_tdctrig_tdc[i] << endl;
+	  //	  cout << elem << "\t" << T->bb_tdctrig_tdc[i] << endl;
 
-	    if (elem == 0 ) bbtrig0 = T->bb_tdctrig_tdc[i];
-	    if (elem == 1 ) bbtrig1 = T->bb_tdctrig_tdc[i];
-	    if (elem == 2 ) bbtrig2 = T->bb_tdctrig_tdc[i];
-	    if (elem == 3 ) bbtrig3 = T->bb_tdctrig_tdc[i];
-	    if (elem == 4 ) bbtrig4 = T->bb_tdctrig_tdc[i];
-	    if (elem == 5 ) bbtrig5 = T->bb_tdctrig_tdc[i];
+	  if (elem == 0 ) bbtrig0 = T->bb_tdctrig_tdc[i];
+	  if (elem == 1 ) bbtrig1 = T->bb_tdctrig_tdc[i];
+	  if (elem == 2 ) bbtrig2 = T->bb_tdctrig_tdc[i];
+	  if (elem == 3 ) bbtrig3 = T->bb_tdctrig_tdc[i];
+	  if (elem == 4 ) bbtrig4 = T->bb_tdctrig_tdc[i];
+	  if (elem == 5 ) bbtrig5 = T->bb_tdctrig_tdc[i];
 	  }
-	  */
-	  // 	if( bbtrig0 != -999 )
-	  // 	  cout << bbtrig0 << endl;
+	*/
+	//if( bbtrig0 != -999 )
+	//cout << bbtrig0 << endl;
 
-	  Double_t tmean_corr1, tmean_corr2, tmean_corr;
+	Double_t tmean_corr1, tmean_corr2, tmean_corr;
 
-	  if( T->Ndata_bb_hodotdc_clus_bar_tdc_meantime == 2 ) {
+	if( T->Ndata_bb_hodotdc_clus_bar_tdc_meantime == 2 ) {
 
-	    //	  tmean_corr = T->bb_hodotdc_clus_tmean[0] - T->bb_hodotdc_Ref_tdc[0];
+	  //tmean_corr = T->bb_hodotdc_clus_tmean[0] - T->bb_hodotdc_Ref_tdc[0];
 	  
-	    //	  for( int i = 0 ; i < T->Ndata_bb_hodotdc_clus_bar_tdc_meantime ) {
+	  //for( int i = 0 ; i < T->Ndata_bb_hodotdc_clus_bar_tdc_meantime ) {
 
 
-	    tmean_corr1 = T->bb_hodotdc_clus_bar_tdc_meantime[0];
-	    // 	  //tmean_corr1 = (tmean_corr1 - 5.14*T->bb_tr_p[0] + 7.71); 
+	  tmean_corr1 = T->bb_hodotdc_clus_bar_tdc_meantime[0];
+	  //tmean_corr1 = (tmean_corr1 - 5.14*T->bb_tr_p[0] + 7.71); 
 
-	    tmean_corr2 = T->bb_hodotdc_clus_bar_tdc_meantime[1];
-	    // 	  //	  tmean_corr2 = (tmean_corr2 - 5.14*T->bb_tr_p[0] + 7.71); 
+	  tmean_corr2 = T->bb_hodotdc_clus_bar_tdc_meantime[1];
+	  //tmean_corr2 = (tmean_corr2 - 5.14*T->bb_tr_p[0] + 7.71); 
 	  
-	    tmean_corr = tmean_corr2 - tmean_corr1;// - T->bb_hodotdc_Ref_tdc[0]; // - tmean_corr2;
+	  tmean_corr = tmean_corr2 - tmean_corr1;// - T->bb_hodotdc_Ref_tdc[0]; // - tmean_corr2;
 	  
-	    // 	  hMean[maxbar]->Fill( T->bb_tr_p[0], tmean_corr1 ); 
-	    // 	  hMeanp[maxbar]->Fill( T->bb_tr_p[0], (tmean_corr - 5.14*T->bb_tr_p[0] + 7.71) ); 
-	    // 	  hMeanc[maxbar]->Fill( T->bb_tr_p[0], tmean_corr ); 
+	  //hMean[maxbar]->Fill( T->bb_tr_p[0], tmean_corr1 ); 
+	  //hMeanp[maxbar]->Fill( T->bb_tr_p[0], (tmean_corr - 5.14*T->bb_tr_p[0] + 7.71) ); 
+	  //hMeanc[maxbar]->Fill( T->bb_tr_p[0], tmean_corr ); 
 
-	    hMean[maxbar]->Fill( tmean_corr2, tmean_corr1 ); 
-	    hMeanp[maxbar]->Fill( T->bb_tr_p[0], (tmean_corr - 5.14*T->bb_tr_p[0] + 7.71) ); 
-	    hMeanc[maxbar]->Fill( tmean_corr2, tmean_corr ); 
+	  hMean[maxbar]->Fill( tmean_corr2, tmean_corr1 ); 
+	  hMeanp[maxbar]->Fill( T->bb_tr_p[0], (tmean_corr - 5.14*T->bb_tr_p[0] + 7.71) ); 
+	  hMeanc[maxbar]->Fill( tmean_corr2, tmean_corr ); 
 	  
 
-	    //	    Double_t tmean_corr = T->bb_hodotdc_clus_tmean[0];//- 0.42*T->bb_sh_atimeblk - 2.8;  	
-	    //	tmean_corr = tmean_corr - 2.7*T->bb_tr_p[0] + 4.7;  	
+	  //Double_t tmean_corr = T->bb_hodotdc_clus_tmean[0];//- 0.42*T->bb_sh_atimeblk - 2.8;  	
+	  //tmean_corr = tmean_corr - 2.7*T->bb_tr_p[0] + 4.7;  	
 	
-	    Double_t hcal_time = T->sbs_hcal_tdctimeblk + 73;
+	  Double_t hcal_time = T->sbs_hcal_tdctimeblk;
 
-	    hMeansht0[maxbar]->Fill( tmean_corr1,  tmean_corr2  );
-	    hMeansht1[maxbar]->Fill( hcal_time,  (tmean_corr  - hcal_time)  );
-	    hMeansht2[maxbar]->Fill( hcal_time,  (tmean_corr)  );
-	    hMeansht3[maxbar]->Fill( hcal_time,  tmean_corr1  );
-	    hMeansht4[maxbar]->Fill( hcal_time,  tmean_corr2  );
-	    hMeansht5[maxbar]->Fill( hcal_time,  (tmean_corr2 - hcal_time)  );
+	  hMeansht0[maxbar]->Fill( tmean_corr1,  tmean_corr2  );
+	  hMeansht1[maxbar]->Fill( hcal_time,  (tmean_corr  - hcal_time)  );
+	  hMeansht2[maxbar]->Fill( hcal_time,  (tmean_corr)  );
+	  hMeansht3[maxbar]->Fill( hcal_time,  tmean_corr1  );
+	  hMeansht4[maxbar]->Fill( hcal_time,  tmean_corr2  );
+	  hMeansht5[maxbar]->Fill( hcal_time,  (tmean_corr2 - hcal_time)  );
 
-	    //	hMeanc[maxbar]->Fill( T->bb_tr_p[0], tmean_corr ); 
+	  //	hMeanc[maxbar]->Fill( T->bb_tr_p[0], tmean_corr ); 
 
-	    //hMeanc[maxbar]->Fill(T->bb_tr_p[0], tmean_corr ); 
-	    hMeanE[maxbar]->Fill((T->bb_ps_e + T->bb_sh_e)  , tmean_corr );  	
-	    hMeanshE[maxbar]->Fill((T->bb_sh_e)  , tmean_corr );  	
-	    //	hMeanc[maxbar]->Fill( (T->bb_sh_e)  , tmean_corr );
-	    hMeanpsE[maxbar]->Fill((T->bb_ps_e)  , tmean_corr );  	
-	    hMeansht[maxbar]->Fill( T->bb_sh_atimeblk,  tmean_corr  );
-	    //hMeansht[maxbar]->Fill( T->bb_sh_atimeblk , tdiff_corr ); 	
-	  }
-	
-	
-	  /*
-	    if( maxbar >= 32 && maxbar < 64 ) {
-	    for(int i = 0 ; i < T->Ndata_bb_hodoadc_bar_adc_L_ap ; i++ ) 
-	    if( T->bb_hodoadc_bar_adc_id[i] == maxbar - 32 ) { 
-	    hth2d_fadcl2->Fill(T->bb_hodoadc_bar_adc_L_ap[i], T->bb_hodoadc_bar_adc_id[i]);
-	    hth2d_fadcr2->Fill(T->bb_hodoadc_bar_adc_R_ap[i], T->bb_hodoadc_bar_adc_id[i]);
-	    hth_fadcl2->Fill(T->bb_hodoadc_bar_adc_L_ap[i]);
-	    hth_fadcr2->Fill(T->bb_hodoadc_bar_adc_R_ap[i]);
-	    }
-	    }
-	  */
+	  //hMeanc[maxbar]->Fill(T->bb_tr_p[0], tmean_corr ); 
+	  hMeanE[maxbar]->Fill((T->bb_ps_e + T->bb_sh_e)  , tmean_corr );  	
+	  hMeanshE[maxbar]->Fill((T->bb_sh_e)  , tmean_corr );  	
+	  //	hMeanc[maxbar]->Fill( (T->bb_sh_e)  , tmean_corr );
+	  hMeanpsE[maxbar]->Fill((T->bb_ps_e)  , tmean_corr );  	
+	  hMeansht[maxbar]->Fill( T->bb_sh_atimeblk,  tmean_corr  );
+	  //hMeansht[maxbar]->Fill( T->bb_sh_atimeblk , tdiff_corr ); 	
 	}
+	
       }
+    }
   }//End of event loop
   
   
@@ -1276,12 +1037,12 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
   // GEM-Hodoscope track matching plots
   //-----------------------------------------------------------------------------------------------------------------------------
 
-    Int_t kin_no1;
+  Int_t kin_no1;
 
-    if( kin_no > 14 ) 
-      kin_no1 = kin_no - 10;
-    else
-      kin_no1 = kin_no;
+  if( kin_no > 14 ) 
+    kin_no1 = kin_no - 10;
+  else
+    kin_no1 = kin_no;
 
 
   TLatex* tex;
@@ -1416,7 +1177,8 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
     tex->SetTextSize(0.095);
     tex->Draw();
 
-    tex = new TLatex( 0.24, 0.4, Form("Run %d", run_no ));
+    //tex = new TLatex( 0.24, 0.4, Form("Run %d", run_no ));
+    tex = new TLatex( 0.24, 0.4, Form("All %s Runs", Target.Data()));
     tex->SetNDC(1);
     tex->SetTextFont(42);
     tex->SetTextColor(1);
@@ -1477,7 +1239,7 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
     Int_t nBars_red = 0;
 
 
-   for(Int_t i=0; i<nBarsTDC; i++){ 
+    for(Int_t i=0; i<nBarsTDC; i++){ 
       
       Bar[i]  = (Double_t)i;
 
@@ -1573,54 +1335,54 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
       esigy[i] = gausf->GetParError(2);
     }    
 
-   TGraphErrors* gRest = new TGraphErrors( nBarsTDC, Bar, sigt, eBar, esigt );
-   gRest->SetMarkerColor( 1 );
-   gRest->SetLineColor( 1 );
-   gRest->SetMarkerStyle( 20 );
-   gRest->SetMarkerSize( 0.8 );
-   gRest->Draw("AP");
-   gRest->GetXaxis()->SetTitle( "Hodoscope Bar ID");
-   gRest->GetYaxis()->SetTitle( "Bar Time Diff Resolution [ns]");
-   gRest->GetYaxis()->SetRangeUser( 0.0, 1.0 );
-   gRest->GetXaxis()->SetRangeUser( 0, 85 );
-   gRest->RemovePoint(59);
-   gRest->RemovePoint(29);
+    TGraphErrors* gRest = new TGraphErrors( nBarsTDC, Bar, sigt, eBar, esigt );
+    gRest->SetMarkerColor( 1 );
+    gRest->SetLineColor( 1 );
+    gRest->SetMarkerStyle( 20 );
+    gRest->SetMarkerSize( 0.8 );
+    gRest->Draw("AP");
+    gRest->GetXaxis()->SetTitle( "Hodoscope Bar ID");
+    gRest->GetYaxis()->SetTitle( "Bar Time Diff Resolution [ns]");
+    gRest->GetYaxis()->SetRangeUser( 0.0, 1.0 );
+    gRest->GetXaxis()->SetRangeUser( 0, 85 );
+    gRest->RemovePoint(59);
+    gRest->RemovePoint(29);
 
-   TF1* meanrest = new TF1("meanrest","pol0", 12., 78.);  
-   meanrest->SetLineColor( 1 );
-   gRest->Fit(meanrest,"Q","",barlow, barhigh);;
+    TF1* meanrest = new TF1("meanrest","pol0", 12., 78.);  
+    meanrest->SetLineColor( 1 );
+    gRest->Fit(meanrest,"Q","",barlow, barhigh);;
     
-   tex = new TLatex( 0.34, 0.9, Form("Mean = %3.1f ps", 1000*meanrest->GetParameter(0)));
-   tex->SetNDC(1);
-   tex->SetTextFont(42);
-   tex->SetTextColor(1);
-   tex->SetTextSize(0.055);
-   tex->Draw();
+    tex = new TLatex( 0.34, 0.9, Form("Mean = %3.1f ps", 1000*meanrest->GetParameter(0)));
+    tex->SetNDC(1);
+    tex->SetTextFont(42);
+    tex->SetTextColor(1);
+    tex->SetTextSize(0.055);
+    tex->Draw();
 
-   TGraphErrors* gRestd = new TGraphErrors( nBars_red, BarRed, sigtd, eBar, esigtd );
-   gRestd->SetMarkerColor( 2 );
-   gRestd->SetLineColor( 2 );
-   gRestd->SetMarkerStyle( 20 );
-   gRestd->SetMarkerSize( 0.8 );
-   //gRestd->Draw("AP");
-   gRestd->GetXaxis()->SetTitle( "Hodoscope Bar ID");
-   gRestd->GetYaxis()->SetTitle( "Bar Mean Time Resolution [ns]");
-   gRestd->GetYaxis()->SetRangeUser( 0.0, 1.0 );
-   gRestd->GetXaxis()->SetRangeUser( 0, 85 );
-   gRestd->RemovePoint(59);
-   gRestd->RemovePoint(29);
-   //    gRestd->RemovePoint(21);
+    TGraphErrors* gRestd = new TGraphErrors( nBars_red, BarRed, sigtd, eBar, esigtd );
+    gRestd->SetMarkerColor( 2 );
+    gRestd->SetLineColor( 2 );
+    gRestd->SetMarkerStyle( 20 );
+    gRestd->SetMarkerSize( 0.8 );
+    //gRestd->Draw("AP");
+    gRestd->GetXaxis()->SetTitle( "Hodoscope Bar ID");
+    gRestd->GetYaxis()->SetTitle( "Bar Mean Time Resolution [ns]");
+    gRestd->GetYaxis()->SetRangeUser( 0.0, 1.0 );
+    gRestd->GetXaxis()->SetRangeUser( 0, 85 );
+    gRestd->RemovePoint(59);
+    gRestd->RemovePoint(29);
+    //    gRestd->RemovePoint(21);
    
-   TF1* meanrestd = new TF1("meanrestd","pol0", 12., 78.);  
-   meanrestd->SetLineColor( 2 );
-   gRestd->Fit(meanrestd,"QN","",barlow, barhigh);
+    TF1* meanrestd = new TF1("meanrestd","pol0", 12., 78.);  
+    meanrestd->SetLineColor( 2 );
+    gRestd->Fit(meanrestd,"QN","",barlow, barhigh);
     
-   tex = new TLatex( 0.34, 0.9, Form("Mean = %3.1f ps", 1000*meanrestd->GetParameter(0)));
-   tex->SetNDC(2);
-   tex->SetTextFont(42);
-   tex->SetTextColor(2);
-   tex->SetTextSize(0.055);
-   //   tex->Draw();
+    tex = new TLatex( 0.34, 0.9, Form("Mean = %3.1f ps", 1000*meanrestd->GetParameter(0)));
+    tex->SetNDC(2);
+    tex->SetTextFont(42);
+    tex->SetTextColor(2);
+    tex->SetTextSize(0.055);
+    //   tex->Draw();
 
     c2->cd(4)->SetRightMargin(.05);
 
@@ -1741,7 +1503,8 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
     tex->SetTextSize(0.095);
     tex->Draw();
 
-    tex = new TLatex( 0.24, 0.4, Form("Run %d", run_no ));
+    //tex = new TLatex( 0.24, 0.4, Form("Run %d", run_no ));
+    tex = new TLatex( 0.24, 0.4, Form("All %s Runs", Target.Data()));
     tex->SetNDC(1);
     tex->SetTextFont(42);
     tex->SetTextColor(1);
@@ -1817,7 +1580,8 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
     tex->SetTextSize(0.095);
     tex->Draw();
 
-    tex = new TLatex( 0.24, 0.4, Form("Run %d", run_no ));
+    //tex = new TLatex( 0.24, 0.4, Form("Run %d", run_no ));
+    tex = new TLatex( 0.24, 0.4, Form("All %s Runs", Target.Data()));
     tex->SetNDC(1);
     tex->SetTextFont(42);
     tex->SetTextColor(1);
@@ -1888,354 +1652,67 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
     
   }  
 
-  //-----------------------------------------------------------------------------------------------------------------------------
-  // Pre-shower and Shower correlation plots
-  //-----------------------------------------------------------------------------------------------------------------------------
-
-  /*
-  if( PlotBBCal ) {
-
-    TCanvas* c3 = new TCanvas("c3","",1200,800);
-    c3->Divide(4,2);
-    c3->cd(1)->SetLogy(1);
-    hbbcal_psE->Draw("");
-    if( kin_no != 4 ) 
-      hbbcal_psE->GetYaxis()->SetRangeUser(1,6e5);
-    hbbcal_psEc->SetLineColor(2);
-    hbbcal_psEc->Draw("same");
-    hbbcal_psE->GetXaxis()->SetTitle("BBCal PS Energy [GeV]");
-
-    tex = new TLatex( 0.48, 0.8, "All tracks");
-    tex->SetNDC(1);
-    tex->SetTextFont(42);
-    tex->SetTextColor(4);
-    tex->SetTextSize(0.055);
-    tex->Draw();
-    
-    tex = new TLatex( 0.48, 0.72, "After cuts");
-    tex->SetNDC(1);
-    tex->SetTextFont(42);
-    tex->SetTextColor(2);
-    tex->SetTextSize(0.055);
-    tex->Draw();
-
-    c3->cd(2)->SetLogy(1);
-    hbbcal_shE->Draw("");
-    hbbcal_shEc->SetLineColor(2);
-    hbbcal_shEc->Draw("same");
-    hbbcal_shE->GetXaxis()->SetTitle("BBCal Shower Energy [GeV]");
-
-    c3->cd(3)->SetLogy(1);
-    hbbcal_cale->Draw();
-    hbbcal_calec->SetLineColor(2);
-    hbbcal_calec->Draw("same");
-    hbbcal_cale->GetXaxis()->SetTitle("E_{bbcal} [GeV]");
-
-    c3->cd(4);
-    hbbcal2d_pss->Draw("colz");
-    hbbcal2d_pss->GetXaxis()->SetTitle("E_{SH}/p_{bbtrack}");
-    hbbcal2d_pss->GetYaxis()->SetTitle("E_{PS}/p_{bbtrack}");
-    TLine *line1 = new TLine(0,sh_min,sh_min/sh_e,0); 
-    line1->SetLineColor(2); 
-    line1->SetLineWidth(2); 
-    line1->Draw(); 
-    TLine *line3 = new TLine(0,sh_max,sh_max/sh_e,0); 
-    line3->SetLineColor(2); 
-    line3->SetLineWidth(2); 
-    line3->Draw(); 
-    TLine *line2 = new TLine(0,ps_min,1.2,ps_min); 
-    line2->SetLineColor(2); 
-    line2->SetLineWidth(2); 
-    line2->Draw(); 
-
-    c3->cd(8);
-    hbbcal2d_pssc->Draw("colz");
-    hbbcal2d_pssc->GetXaxis()->SetTitle("E_{SH}/p_{bbtrack}");
-    hbbcal2d_pssc->GetYaxis()->SetTitle("E_{PS}/p_{bbtrack}");
-
-    c3->cd(5)->SetLogy(1);
-    hbbcal_edivp->Draw();
-    if( kin_no != 4 ) 
-      hbbcal_edivp->GetYaxis()->SetRangeUser(1,2e5);
-    hbbcal_edivpc->SetLineColor(2);
-    hbbcal_edivpc->Draw("same");
-    TF1* gausfedp = new TF1("gausfedp","gaus(0)",-1.00, 1.00);
-    gausfedp->SetLineColor(1);
-    hbbcal_edivpc->Fit(gausfedp,"Q");
-    hbbcal_edivp->GetXaxis()->SetTitle("(E_{bbcal} - p_{bbtrack}) [GeV]");
-
-    tex = new TLatex( 0.54, 0.9, Form("#sigma = %3.2f %%", 
-				      100.*TMath::Sqrt( (gausfedp->GetParameter(2)/pcent) * 
-							(gausfedp->GetParameter(2)/pcent) - pres*pres ) ) );
-    tex->SetNDC(1);
-    tex->SetTextFont(42);
-    tex->SetTextColor(2);
-    tex->SetTextSize(0.055);
-    tex->Draw();
-
-    c3->cd(6)->SetLogy(1);
-    
-    TF1* gausf = new TF1("gausf","gaus(0)",-0.20, 0.20);
-    hbbcal_xdiff->Draw("");
-    gausf->SetLineColor(1);
-    hbbcal_xdiffc->SetLineColor(2);
-    hbbcal_xdiffc->Draw("same");
-    hbbcal_xdiff->GetXaxis()->SetTitle("#delta x_{FP} (GEM-BBSH) [m]");
-
-    TF1* gausfc = new TF1("gausfc","gaus(0)",-0.20, 0.20);
-    gausfc->SetLineColor(1);
-    hbbcal_xdiffc->Fit(gausfc,"Q");
-
-    tex = new TLatex( 0.54, 0.9, Form("#sigma = %2.1f cm", 100.*gausfc->GetParameter(2)));
-    tex->SetNDC(1);
-    tex->SetTextFont(42);
-    tex->SetTextColor(2);
-    tex->SetTextSize(0.055);
-    tex->Draw();
-
-
-    c3->cd(7)->SetLogy(1);
-
-    hbbcal_ydiff->Draw("");
-    //    hbbcal_xdiff->Fit(gausf,"Q");
-    hbbcal_ydiffc->SetLineColor(2);
-    hbbcal_ydiffc->Draw("same");
-    gausfc->SetLineColor(1);
-    hbbcal_ydiffc->Fit(gausfc,"Q");
-    hbbcal_ydiff->GetXaxis()->SetTitle("#delta y_{FP} (GEM-BBSH) [m]");
-
-    tex = new TLatex( 0.54, 0.9, Form("#sigma = %2.1f cm", 100.*gausfc->GetParameter(2)));
-    tex->SetNDC(1);
-    tex->SetTextFont(42);
-    tex->SetTextColor(2);
-    tex->SetTextSize(0.055);
-    tex->Draw();
-
-    c3->Print("kinematics_1.pdf");
-    c3->Print("bbhodo_temp3.pdf");
-    c3->Close();
-  }
-  
-  //-----------------------------------------------------------------------------------------------------------------------------
-  // Kinematic plots
-  //-----------------------------------------------------------------------------------------------------------------------------
-
-  if( PlotKine ) {
-
-    TCanvas* c4 = new TCanvas("c4","",1200,800);
-    c4->Divide(4,2);
-
-    c4->cd(1);
-    hkin_p->Draw();
-    hkin_p->GetXaxis()->SetTitle("p_{bbtrack} [GeV/c]");
-
-    tex = new TLatex( 0.45, 0.8, "All tracks");
-    tex->SetNDC(1);
-    tex->SetTextFont(42);
-    tex->SetTextColor(4);
-    tex->SetTextSize(0.05);
-    tex->Draw();
-
-    tex = new TLatex( 0.45, 0.75, "(E_{ps} > 0.05 GeV)");
-    tex->SetNDC(1);
-    tex->SetTextFont(42);
-    tex->SetTextColor(4);
-    tex->SetTextSize(0.05);
-    tex->Draw();
-
-    c4->cd(2);
-    hkin_th->Draw();
-    hkin_th->GetXaxis()->SetTitle("#theta_tgt_{bbtrack} [rad]");
-
-    c4->cd(3);
-    hkin_ph->Draw();
-    hkin_ph->GetXaxis()->SetTitle("#phi_tgt_{bbtrack} [rad]");
-
-    c4->cd(4);
-    hkin_yt->Draw();
-    hkin_yt->GetXaxis()->SetTitle("y_tgt_{bbtrack} [m]");
-
-    c4->cd(5);
-    hkin2d_thp->Draw("colz");
-    hkin2d_thp->GetXaxis()->SetTitle("#theta_{bblab} [degrees]");
-    hkin2d_thp->GetYaxis()->SetTitle("p_{bbtrack} [GeV/c]");
-
-    c4->cd(6);
-    hhcal_deltaxy->Draw("colz");
-    hhcal_deltaxy->GetXaxis()->SetTitle("HCal (Meas - Pred) y[m]");
-    hhcal_deltaxy->GetYaxis()->SetTitle("HCal (Meas - Pred) x[m]");
-    
-    c4->cd(7);
-    hkin_W->Draw();
-    hkin_W->GetXaxis()->SetTitle("W^{2} [GeV^{2}]");
-    
-    c4->cd(8);
-    hkin_pdiff->Draw();
-    hkin_pdiff->GetXaxis()->SetTitle("p_{bbtrack} - p_{#theta exp} [GeV/c]");
-
-    c4->Print("bbhodo_temp4.pdf");
-    c4->Print("kinematics_2.pdf");
-    c4->Close();
-    
-    TCanvas* c5 = new TCanvas("c5","",1200,800);
-    c5->Divide(4,2);
-
-    c5->cd(1);
-    hkin_pc->Draw();
-    hkin_pc->SetLineColor(2);
-    hkin_pc->GetXaxis()->SetTitle("p_{bbtrack} [GeV/c]");
-
-    tex = new TLatex( 0.58, 0.8, "After cuts");
-    tex->SetNDC(1);
-    tex->SetTextFont(42);
-    tex->SetTextColor(2);
-    tex->SetTextSize(0.05);
-    tex->Draw();
-
-    c5->cd(2);
-    hkin_thc->Draw();
-    hkin_thc->SetLineColor(2);
-    hkin_thc->GetXaxis()->SetTitle("#theta_tgt_{bbtrack} [rad]");
-
-    c5->cd(3);
-    hkin_phc->Draw();
-    hkin_phc->SetLineColor(2);
-    hkin_phc->GetXaxis()->SetTitle("#phi_tgt_{bbtrack} [rad]");
-
-    c5->cd(4);
-    hkin_ytc->Draw();
-    hkin_ytc->SetLineColor(2);
-    hkin_ytc->GetXaxis()->SetTitle("y_tgt_{bbtrack} [m]");
-
-    c5->cd(5);
-    hkin2d_thpc->Draw("colz");
-    hkin2d_thpc->GetXaxis()->SetTitle("#theta_{bblab} [degrees]");
-    hkin2d_thpc->GetYaxis()->SetTitle("p_{bbtrack} [GeV/c]");
-
-    cout << hkin2d_thpc->GetMean(1) << "\t" << hkin2d_thpc->GetMean(2) << endl;
-    
-    c5->cd(6);
-    hkin_deltaxyc->Draw("colz");
-    hkin_deltaxyc->GetXaxis()->SetTitle("Hcal (Pred - Meas) y[m]");
-    hkin_deltaxyc->GetYaxis()->SetTitle("Hcal (Pred - Meas) x[m]");
-    
-    c5->cd(7);
-    hkin_Wc->Draw();
-    hkin_Wc->SetLineColor(2);
-    hkin_Wc->GetXaxis()->SetTitle("W^{2} [GeV^{2}]");
-
-    
-    c5->cd(8);
-    hkin_pdiffc->Draw();
-    hkin_pdiffc->SetLineColor(2);
-    hkin_pdiffc->GetXaxis()->SetTitle("p_{bbtrack} - p_{#theta exp} [GeV/c]");
-
-    if( DoFit ) {
-
-      Float_t binwidth = hkin_pdiffc->GetXaxis()->GetBinWidth(1); 
+  if( PlotDiff ) {
+    TCanvas* cdiff = new TCanvas();
+    cdiff->cd();
+    const Double_t fEff_c     = 0.175; 
+    const Double_t fDiff_cut = 0.1;
       
-      //this method works when the peak is clear and higher than the bg
-      int maxbin = hkin_pdiffc->GetMaximumBin();
-      float a = hkin_pdiffc->GetMaximum();
-      float b = hkin_pdiffc->GetBinCenter(maxbin);
+    ofstream tdiffOutFile;
+    tdiffOutFile.open(Form("tdiff_%s_%d.txt",Target.Data(),kin_no));
+    if(!tdiffOutFile.is_open()){
+      cout << "Couldn't open tdiff out file! Exiting!" << endl;
+      exit(2);
+    }
+    ofstream vscintOutFile;
+    vscintOutFile.open(Form("vscint_%s_%d.txt",Target.Data(),kin_no));
+    if(!vscintOutFile.is_open()){
+      cout << "Couldn't open vscint out file! Exiting!" << endl;
+      exit(2);
+    }
+      
+      
+    TF1 *f1 = new TF1("f1","[0]+[1]*x",-0.25,0.25);
+    f1->SetLineColor(kRed);    
 
-      //need this method when the peak is less clear (high Q2 kinematics)
-      //float b = 0;
-      //float maxbin = hkin_pdiffc->FindBin(0);
-      //float a = hkin_pdiffc->GetBinContent(maxbin);
-      
-      float pmean    = b;
-      float pwidth   = 0.05;
+    Double_t td0[nBarsTDC];
+    Double_t vsc[nBarsTDC];
 
-      float pmin   = pmean - 3*pwidth;    // peak minimum 
-      float pmax   = pmean + 3*pwidth;    // peak maximum 
-      
-      float cmin   = -0.3;    // fit minimum 
-      float cmax   = 0.3;    // fit maximum 
-
-      int pbmin   = hkin_pdiffc->FindBin( pmin ); 
-      int pbmax   = hkin_pdiffc->FindBin( pmax ); 
-      int pbrange = pbmax - pbmin; 
-      float pbins[pbrange], perr[pbrange]; 
-      for( int i = pbmin; i < pbmax; i++) { 
-	pbins[i - pbmin] = hkin_pdiffc->GetBinContent( i ); 
-	perr[i - pbmin]  = hkin_pdiffc->GetBinError( i ); 
-	hkin_pdiffc->SetBinContent( i, 0 ); 
-	hkin_pdiffc->SetBinError( i, 0 ); 
-      } 
-      
-      TF1* bg = new TF1("back", "pol1(0)", cmin, cmax);     // 1-D root function 
-      hkin_pdiffc->Fit("back","Q","",cmin,cmax); 
-      
-      float abg = bg->Eval(b);
-      float par0 = bg->GetParameter(0); 
-      float par1 = bg->GetParameter(1); 
-      //float par2 = bg->GetParameter(2); 
-      //float par3 = bg->GetParameter(3); 
-      
-      bg->SetLineWidth(2); 
-      bg->SetLineColor(4); 
-      
-      for( int i = pbmin; i < pbmax; i++) { 
-	hkin_pdiffc->SetBinContent( i, pbins[i - pbmin] ); 
-	hkin_pdiffc->SetBinError( i, perr[i - pbmin] ); 
-      } 
-      
-      TF1* peakbg = new TF1("peakbg", "pol1(0)+gaus(4)", cmin, cmax); 
-      peakbg->FixParameter( 0, par0   ); 
-      peakbg->FixParameter( 1, par1   ); 
-      //peakbg->FixParameter( 2, par2   ); 
-      //peakbg->FixParameter( 3, par3   ); 
-      peakbg->FixParameter( 4, a-abg);
-      peakbg->FixParameter( 5, b); 
-      peakbg->SetParameter( 6, pwidth );    
-      peakbg->SetLineWidth(2); 
-      peakbg->SetLineColor(1); 
-      hkin_pdiffc->Fit("peakbg","Q","",cmin,cmax); 
-      peakbg->Draw("same"); 
-      bg->Draw("same"); 
-      
-      float chi2              = peakbg->GetChisquare(); 
-      float NDF               = peakbg->GetNDF(); 
-      float fitted_mean       = peakbg->GetParameter(5); 
-      float fitted_mean_err   = peakbg->GetParError(5); 
-      float fitted_sigma      = peakbg->GetParameter(6); 
-      float fitted_sigma_err  = peakbg->GetParError(6); 
-      
-      float integral     = (peakbg->Integral(cmin, cmax) - bg->Integral(cmin,cmax)) / binwidth; 
-      float integral_err = TMath::Sqrt( integral ); 
-      
-      if( kin_no == 4)
-	tex = new TLatex( 0.43, 0.9, Form("R_{elastic} = %3.1fk /uAh", (0.001*integral/(runtime*avI/3600))));
-      else 
-	tex = new TLatex( 0.43, 0.9, Form("R_{elastic} = %3.1f /uAh", (integral/(runtime*avI/3600))));
-     
-      tex->SetNDC(1);
-      tex->SetTextFont(42);
-      tex->SetTextColor(1);
-      tex->SetTextSize(0.05);
-      tex->Draw();
-      
-      tex = new TLatex( 0.43, 0.83, Form("#sigma = %3.2f %%", 100*(fitted_sigma/pcent)));
-      tex->SetNDC(1);
-      tex->SetTextFont(42);
-      tex->SetTextColor(1);
-      tex->SetTextSize(0.05);
-      tex->Draw();
-
+    for(Int_t i=0; i<nBarsTDC; i++) {
+      hDiff[i]->Fit(f1,"Q");
+      td0[i] = 2*f1->GetParameter(0);
+      vsc[i] = -1./f1->GetParameter(1);
+      cout << td0[i] << " " << vsc[i] << " " << f1->GetChisquare()/f1->GetNDF() << endl;
     }
 
-    c5->Print("bbhodo_temp5.pdf");
-    c5->Print("kinematics_3.pdf");
-    //c5->Print("kinematics_aftercuts.C");
-    c5->Close();
-  }
-  */
-  
-  //-----------------------------------------------------------------------------------------------------------------------------
-  // Optics plots
-  //-----------------------------------------------------------------------------------------------------------------------------
+    vscintOutFile << "bb.hodotdc.vscint =" << endl;
+    for(Int_t i=0; i<nBarsTDC; i++) {
+      if( fabs(vsc[i] - fEff_c  ) > fDiff_cut )
+	vscintOutFile << fEff_c << endl;
+      else
+	vscintOutFile << vsc[i] << endl;
+    }
 
+
+    tdiffOutFile << "bb.hodotdc.tdiffoffset =" << endl;
+    for(Int_t i=0; i<nBarsTDC; i++) {
+      if( fabs(vsc[i] - fEff_c ) > fDiff_cut )
+	tdiffOutFile << -0.68 << endl;
+      else
+	tdiffOutFile << td0[i] << endl;
+    }
+    
+    vscintOutFile.close();
+    tdiffOutFile.close();    
+    cdiff->Close();
+  }
+   
+   
+   
+  //------------------------------------------------------------------------  
+  // Optics plots
+  //--------------------------------------------------------------------------
+   
   if( PlotOptics ) {
 
     TCanvas* c6 = new TCanvas("c6","",1200,800);
@@ -2297,61 +1774,8 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
     //c6->Print("kinematics_4.pdf");
     c6->Close();
     
-    if( PlotDiff ) {
-      TCanvas* cdiff = new TCanvas();
-      cdiff->cd();
-      const Double_t fEff_c     = 0.175; 
-      const Double_t fDiff_cut = 0.1;
-      
-      ofstream tdiffOutFile;
-      tdiffOutFile.open(Form("tdiff_%d.txt",kin_no));
-      if(!tdiffOutFile.is_open()){
-	cout << "Couldn't open tdiff out file! Exiting!" << endl;
-	exit(2);
-      }
-      ofstream vscintOutFile;
-      vscintOutFile.open(Form("vscint_%d.txt",kin_no));
-      if(!vscintOutFile.is_open()){
-	cout << "Couldn't open vscint out file! Exiting!" << endl;
-	exit(2);
-      }
-      
-      
-      TF1 *f1 = new TF1("f1","[0]+[1]*x",-0.25,0.25);
-      f1->SetLineColor(kRed);    
-
-      Double_t td0[nBarsTDC];
-      Double_t vsc[nBarsTDC];
-
-      for(Int_t i=0; i<nBarsTDC; i++) {
-	hDiff[i]->Fit(f1,"Q");
-	td0[i] = 2*f1->GetParameter(0);
-	vsc[i] = -1./f1->GetParameter(1);
-	cout << td0[i] << " " << vsc[i] << " " << f1->GetChisquare()/f1->GetNDF() << endl;
-      }
-
-      vscintOutFile << "bb.hodotdc.vscint =" << endl;
-      for(Int_t i=0; i<nBarsTDC; i++) {
-	if( fabs(vsc[i] - fEff_c  ) > fDiff_cut )
-	  vscintOutFile << fEff_c << endl;
-	else
-	  vscintOutFile << vsc[i] << endl;
-      }
-
-
-      tdiffOutFile << "bb.hodotdc.tdiffoffset =" << endl;
-      for(Int_t i=0; i<nBarsTDC; i++) {
-	if( fabs(vsc[i] - fEff_c ) > fDiff_cut )
-	  tdiffOutFile << -0.68 << endl;
-	else
-	  tdiffOutFile << td0[i] << endl;
-      }
-    
-      vscintOutFile.close();
-      tdiffOutFile.close();    
-      cdiff->Close();
-    }
-    
+   
+  
     TCanvas* c7 = new TCanvas("c7","",1200,800);
     c7->Divide(4,2);
 
@@ -2400,232 +1824,15 @@ void AnalyseHodoGEM(const TString Exp = "GEN", const Int_t kin_no = 2, const TSt
   }
 
   
-  //-----------------------------------------------------------------------------------------------------------------------------
-  // HCal plots
-  //-----------------------------------------------------------------------------------------------------------------------------
+  TCanvas* c10 = new TCanvas("c10","",1200,800);
+  c10->Divide(2,1);
+  c10->cd(1);
+  hth2d_ydiff->Draw("colz");
+  c10->cd(2);
+  hth2d_ydiff_c->Draw("colz");
+  c10->Write();
+  c10->Close();
 
-  /*
-  if( PlotHCal ) {
-
-    TCanvas* c8 = new TCanvas("c8","",1200,800);
-    c8->Divide(4,3);
-    c8->cd(1)->SetLogy(1);
-    hhcal_x->Draw("");
-    hhcal_x->GetXaxis()->SetTitle("HCal x[m]");
-    hhcal_xc->SetLineColor(2);
-    hhcal_xc->Draw("same");
-    hhcal_x->GetYaxis()->SetRangeUser(1,1.2*hhcal_x->GetMaximum());
-    
-    tex = new TLatex( 0.48, 0.8, "All BB tracks");
-    tex->SetNDC(1);
-    tex->SetTextFont(42);
-    tex->SetTextColor(4);
-    tex->SetTextSize(0.055);
-    tex->Draw();
-    
-    tex = new TLatex( 0.48, 0.72, "After elastics cuts");
-    tex->SetNDC(1);
-    tex->SetTextFont(42);
-    tex->SetTextColor(2);
-    tex->SetTextSize(0.055);
-    tex->Draw();
-
-    c8->cd(2)->SetLogy(1);
-    hhcal_y->Draw("");
-    hhcal_y->GetXaxis()->SetTitle("HCal y[m]");
-    hhcal_yc->SetLineColor(2);
-    hhcal_yc->Draw("same");
-    hhcal_y->GetYaxis()->SetRangeUser(1,1.2*hhcal_y->GetMaximum());
-    
-    c8->cd(3);
-    hhcal_xy->Draw("colz");
-    hhcal_xy->GetXaxis()->SetTitle("HCal y[m]");
-    hhcal_xy->GetYaxis()->SetTitle("HCal x[m]");
-    
-    c8->cd(4);
-    hhcal_xyc->Draw("colz");
-    hhcal_xyc->GetXaxis()->SetTitle("HCal y[m]");
-    hhcal_xyc->GetYaxis()->SetTitle("HCal x[m]");
-    
-    c8->cd(5)->SetLogy(1);
-    hhcal_predx->Draw("");
-    hhcal_predx->GetXaxis()->SetTitle("HCal predicted x[m]");
-    hhcal_predxc->SetLineColor(2);
-    hhcal_predxc->Draw("same");
-    
-    c8->cd(6)->SetLogy(1);
-    hhcal_predy->Draw("");
-    hhcal_predy->GetXaxis()->SetTitle("HCal predicted y[m]");
-    hhcal_predyc->SetLineColor(2);
-    hhcal_predyc->Draw("same");
-    
-    c8->cd(7);
-    hhcal_predxy->Draw("colz");
-    hhcal_predxy->GetXaxis()->SetTitle("HCal Pred y[m]");
-    hhcal_predxy->GetYaxis()->SetTitle("HCal Pred x[m]");
-
-    c8->cd(8);
-    hhcal_predxyc->Draw("colz");
-    hhcal_predxyc->GetXaxis()->SetTitle("HCal Pred y[m]");
-    hhcal_predxyc->GetYaxis()->SetTitle("HCal Pred x[m]");
-   
-    c8->cd(9)->SetLogy(1);
-    hhcal_deltax->Draw("");
-    hhcal_deltax->GetXaxis()->SetTitle("HCal (Meas - Predicted) x[m]");
-    hhcal_deltaxc->SetLineColor(2);
-    hhcal_deltaxc->Draw("same");
-    
-    c8->cd(10)->SetLogy(1);
-    hhcal_deltay->Draw("");
-    hhcal_deltay->GetXaxis()->SetTitle("HCal (Meas - Pred) y[m]");
-    hhcal_deltayc->SetLineColor(2);
-    hhcal_deltayc->Draw("same");
-    
-    c8->cd(11);
-    hhcal_deltaxy->Draw("colz");
-    hhcal_deltaxy->GetXaxis()->SetTitle("HCal (Meas - Pred) y[m]");
-    hhcal_deltaxy->GetYaxis()->SetTitle("HCal (Meas - Pred) x[m]");
-    
-    c8->cd(12);
-    hhcal_deltaxyc->Draw("colz");
-    hhcal_deltaxyc->GetXaxis()->SetTitle("HCal (Meas - Pred) y[m]");
-    hhcal_deltaxyc->GetYaxis()->SetTitle("HCal (Meas - Pred) x[m]");
-    
-    c8->Print("kinematics_5.pdf");
-    c8->Print("bbhodo_temp8.pdf");
-    c8->Close();
-  
-    
-    TCanvas *c9 = new TCanvas("c9","",1200,800);
-    c9->Divide(2,1);
-    c9->cd(1);
-    hhcal_deltax->Draw("");
-    hhcal_deltax->GetXaxis()->SetTitle("HCal (Meas - Pred) x[m]");
-    hhcal_deltaxc->SetLineColor(2);
-    hhcal_deltaxc->Draw("same");
-    
-    c9->cd(2);
-    hhcal_deltaxc->GetXaxis()->SetTitle("HCal (Meas - Pred) x[m]");
-    hhcal_deltaxc->SetLineColor(2);
-    hhcal_deltaxc->Draw("");
-    
-    //delta_x fit
-    float binwidth = hhcal_deltaxc->GetXaxis()->GetBinWidth(1); 
-    int maxbin = hhcal_deltaxc->GetMaximumBin();
-
-    float a = hhcal_deltaxc->GetMaximum();
-    float b = hhcal_deltaxc->GetBinCenter(maxbin);
-    
-    float pmean    = b;
-    float pwidth   = 0.12;
-    
-    float pmin   = pmean - 3*pwidth;    // peak minimum 
-    float pmax   = pmean + 3*pwidth;    // peak maximum 
-    
-    float cmin   = -1.15;    // fit minimum 
-    float cmax   = -0.15;    // fit maximum 
-    //float cmin = -2.5;
-    //float cmax = 2.5;
-    
-    int pbmin   = hhcal_deltaxc->FindBin( pmin ); 
-    int pbmax   = hhcal_deltaxc->FindBin( pmax ); 
-    
-    int pbrange = pbmax - pbmin; 
-    float pbins[pbrange], perr[pbrange];
-    
-    
-    for( int i = pbmin; i < pbmax; i++) { 
-      pbins[i - pbmin] = hhcal_deltaxc->GetBinContent( i ); 
-      perr[i - pbmin]  = hhcal_deltaxc->GetBinError( i ); 
-      hhcal_deltaxc->SetBinContent( i, 0 ); 
-      hhcal_deltaxc->SetBinError( i, 0 ); 
-    } 
-    
-    TF1* bg = new TF1("bg","gaus(0)",-2.5,2.5);
-    //TF1* bg = new TF1("bg","pol2(0)",-2.5,2.5);
-    bg->SetLineColor(kBlue);
-    hhcal_deltaxc->Fit("bg","Q","",-2.5,2.5);
-    
-    double par0 = bg->GetParameter(0);
-    double par1 = bg->GetParameter(1);
-    double par2 = bg->GetParameter(2);
-    //double par3 = bg->GetParameter(3);
-    
-    TFormula* bgform = bg->GetFormula();
-    double abg = bgform->Eval(b);
-    
-    for( int i = pbmin; i < pbmax; i++) { 
-      hhcal_deltaxc->SetBinContent( i, pbins[i - pbmin] ); 
-      hhcal_deltaxc->SetBinError( i, perr[i - pbmin] ); 
-    } 
-    
-    //TF1* peakbg = new TF1("peakbg","pol2(0)+gaus(4)",cmin,cmax);
-    TF1* peakbg = new TF1("peakbg","gaus(0)+gaus(4)",cmin,cmax);
-    peakbg->SetLineColor(kRed);
-    
-    peakbg->FixParameter(0,par0);
-    peakbg->FixParameter(1,par1);
-    peakbg->FixParameter(2,par2);
-    //peakbg->FixParameter(3,par3);
-    peakbg->FixParameter(4,a-abg);
-    peakbg->FixParameter(5,b);
-    peakbg->SetParameter(6,pwidth);
-    
-    hhcal_deltaxc->Fit("peakbg","Q","",cmin,cmax);
-    bg->Draw("same");
-    peakbg->Draw("same");
-    
-    float fitted_sigma      = peakbg->GetParameter(6); 
-    float fitted_sigma_err  = peakbg->GetParError(6); 
-    
-    float integral = (peakbg->Integral(cmin,cmax) - bg->Integral(cmin,cmax)) / binwidth;
-    
-    if( kin_no == 4)
-      tex = new TLatex( 0.45, 0.9, Form("R_{elastic} = %3.1fk /uAh", (0.001*integral/(runtime*avI/3600))));
-    else 
-      tex = new TLatex( 0.45, 0.9, Form("R_{elastic} = %3.1f /uAh", (integral/(runtime*avI/3600))));
-    
-    tex->SetNDC(1);
-    tex->SetTextFont(42);
-    tex->SetTextColor(1);
-    tex->SetTextSize(0.05);
-    tex->Draw();
-      
-    tex = new TLatex( 0.45, 0.83, Form("#sigma = %3.2f m",fitted_sigma));
-    tex->SetNDC(1);
-    tex->SetTextFont(42);
-    tex->SetTextColor(1);
-    tex->SetTextSize(0.05);
-    tex->Draw();
-    
-    c9->Print("kinematics_6.pdf");
-    c9->Close();
-  }
-
-  if( PlotfADC ) {
-    
-    TCanvas* c66 = new TCanvas("c66","",1200,800);
-    c66->Divide(3,2);  
-    c66->cd(1);
-    hth2d_fadcl1->Draw("colz");
-    c66->cd(2);
-    hth2d_fadcr1->Draw("colz");
-    c66->cd(4);
-    hth2d_fadcl2->Draw("colz");
-    c66->cd(5);
-    hth2d_fadcr2->Draw("colz");
-    c66->cd(3)->SetLogy();
-    hth_fadcl1->Draw("");
-    hth_fadcl2->SetLineColor(2);
-    c66->cd(6);
-    hth_fadcl2->SetLineColor(2);
-    hth_fadcl2->Draw("");
-
-    c66->Print("bbhodo_temp66.pdf");
-    c66->Close();
-  } 
-  */
-  
   gSystem->Exec(Form("pdfunite bbhodo*.pdf HodoTime*.pdf BBHodo_%s%d-%s.pdf",Exp.Data(), kin_no, Target.Data()));
   gSystem->Exec("rm  HodoTime*.pdf");  
   gSystem->Exec("rm  bbhodo_temp*.pdf");  

@@ -9,5 +9,8 @@
 *.root
 
 *.pdf
+*.png
 
 *ACLiC*
+
+*.txt

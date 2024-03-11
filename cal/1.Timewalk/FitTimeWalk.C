@@ -26,8 +26,11 @@ const Double_t ADCCUT = 150.;//100.0;
 //TString REPLAYED_DIR = "/w/work0/home/rachel/HallA/BB_Hodo/FallRun2021/Replayed";
 //TString ANALYSED_DIR = "/w/work0/home/rachel/HallA/BB_Hodo/FallRun2021/Analysed";
 
-TString REPLAYED_DIR = "/w/work5/home/garyp/sbs/rootfiles/GEn/hodocalib/TWcalib/";
-TString ANALYSED_DIR = "/w/work5/home/garyp/sbs/results/hodocalib/";
+//TString REPLAYED_DIR = "/volatile/halla/sbs/gpenman/GEN_REPLAY/rootfiles/GEN2/H2/";
+//TString ANALYSED_DIR = "/work/halla/sbs/gpenman/results/hodocalib/";
+
+TString REPLAYED_DIR = "/volatile/halla/sbs/sbs-gen/GEN_REPLAYS/Rootfiles/GEN2/He3/rootfiles/";
+TString ANALYSED_DIR = "./";
 
 using namespace std;
 
@@ -44,7 +47,14 @@ void FitTimeWalk(const TString InFile="e1209016", Int_t nevents=-1, Int_t cosmic
   //.L FitTimeWalk.C+
   //FitTimeWalk("filename", -1, 0, 1, 0, -999., -999.)
 
-
+  Double_t min_gradient, max_gradient, min_offset, max_offset, default_gradient, default_offset;
+  min_gradient = -0.01;
+  max_gradient = -0.5;
+  min_offset = 0.0;
+  max_offset = 10.0;
+  default_gradient = -0.2;
+  default_offset = 5.0; 
+  
   //Get data from tree
   TString sInFile = REPLAYED_DIR + "/" + InFile + "*.root";
   cout << "Adding " << sInFile << endl;
@@ -287,6 +297,8 @@ void FitTimeWalk(const TString InFile="e1209016", Int_t nevents=-1, Int_t cosmic
 	//constant of each slice gauss
 	leftPad->cd(2);
 	TH1D *hLeVTOTL_0 = (TH1D*)gDirectory->Get(TString::Format("hLeVTOT_Bar%d_L_%d",tdcbar,0));
+	hLeVTOTL_0->GetYaxis()->SetTitle("Leading Edge [ns]");
+	hLeVTOTL_0->GetXaxis()->SetTitle("Time Over Threshold [ns]");
 	hLeVTOTL_0->Draw();
 	//mean of each slice gauss
 	TPad *rightPad = (TPad*)cleft->cd(2);
@@ -323,6 +335,8 @@ void FitTimeWalk(const TString InFile="e1209016", Int_t nevents=-1, Int_t cosmic
 	fLeft[tdcbar] = new TF1(TString::Format("f_Bar%d_L",tdcbar),
 				"[0]*x + [1]",
 				minFitRange, maxFitRange);
+	fLeft[tdcbar]->SetParLimits(0,min_gradient,max_gradient);
+	fLeft[tdcbar]->SetParLimits(1, min_offset, max_offset);
 	//fLeft[tdcbar] = new TF1(TString::Format("f_Bar%d_L",tdcbar),
       	//		      "[0]*x + [1]*x*x + [2]",
       	//		      minFitRange, maxFitRange);
@@ -382,6 +396,8 @@ void FitTimeWalk(const TString InFile="e1209016", Int_t nevents=-1, Int_t cosmic
 	//constant of each slice gauss
 	leftPadr->cd(2);
 	TH1D *hLeVTOTR_0 = (TH1D*)gDirectory->Get(TString::Format("hLeVTOT_Bar%d_R_%d",tdcbar,0));
+	hLeVTOTR_0->GetYaxis()->SetTitle("Leading Edge [ns]");
+	hLeVTOTR_0->GetXaxis()->SetTitle("Time Over Threshold [ns]");
 	hLeVTOTR_0->Draw();
 	//mean of each slice gauss
 	TPad *rightPadr = (TPad*)cright->cd(2);
@@ -419,6 +435,8 @@ void FitTimeWalk(const TString InFile="e1209016", Int_t nevents=-1, Int_t cosmic
 	fRight[tdcbar] = new TF1(TString::Format("f_Bar%d_R",tdcbar),
 				 "[0]*x + [1]",
 				 minFitRanger, maxFitRanger);
+	fRight[tdcbar]->SetParLimits(0,min_gradient,max_gradient);
+	fRight[tdcbar]->SetParLimits(1, min_offset, max_offset);
 	//fRight[tdcbar] = new TF1(TString::Format("f_Bar%d_R",tdcbar),
 	//			      "[0]*x + [1]*x*x + [2]",
 	//			      minFitRanger, maxFitRanger);
@@ -469,6 +487,7 @@ void FitTimeWalk(const TString InFile="e1209016", Int_t nevents=-1, Int_t cosmic
     gSystem->Exec("rm left*.pdf right*.pdf");
     gSystem->Exec(Form("mv TWFits.pdf %s",ANALYSED_DIR.Data()));
     
+    cout << "Writing text files" << endl;
     //write to text file
     textfile << "bb.hodotdc.timewalk0map = " << "\n";
     for(Int_t tdcbarL=0; tdcbarL<nBarsTDC; tdcbarL++){
@@ -487,7 +506,7 @@ void FitTimeWalk(const TString InFile="e1209016", Int_t nevents=-1, Int_t cosmic
     textfile.close();
 
   }//if DoFit==1
-
+  cout << "Finished writing text files" << endl;
   
 
  //Draw any canvases
@@ -556,5 +575,5 @@ void FitTimeWalk(const TString InFile="e1209016", Int_t nevents=-1, Int_t cosmic
   delete cRight2;
 
   
-  //cout << "Getting here before seg fault?" << endl;
+  cout << "Getting here before seg fault?" << endl;
 }//end main
